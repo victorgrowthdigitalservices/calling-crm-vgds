@@ -802,16 +802,22 @@
         const currentTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         container.innerHTML = `
-          <!-- Top Greeting & Header Bar (Image 2 Match) -->
+          <!-- Top Greeting & Header Bar (Image 2 Match with Victor Growth Branding) -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
-            <div>
-              <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-baseline gap-2 flex-wrap">
-                <span>${getGreeting()},</span>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-[#00A859]">Victor Growth Admin</span>
-              </h1>
-              <div class="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                <span class="text-blue-600 font-bold">✦</span>
-                <span>Your Telecalling CRM & Live Telemetry is standing by.</span>
+            <div class="flex items-center gap-4">
+              <div class="vg-glass-logo p-2.5 sm:p-3 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white shadow-xs">
+                <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-9 sm:h-11 w-auto object-contain crisp-img">
+              </div>
+              <div>
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-baseline gap-2 flex-wrap">
+                  <span>${getGreeting()},</span>
+                  <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-[#00A859]">Victor Growth Admin</span>
+                </h1>
+                <div class="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                  <span class="text-[#00A859] font-extrabold tracking-wide">Win The Digital Game</span>
+                  <span class="text-slate-300">•</span>
+                  <span>Autonomous Telecalling CRM & Live Telemetry standing by.</span>
+                </div>
               </div>
             </div>
 
@@ -827,7 +833,7 @@
               </button>
 
               <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-xs font-bold text-emerald-800 shadow-xs">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="w-2 h-2 rounded-full bg-[#00A859] animate-ping"></span>
                 <span>System Online</span>
               </div>
             </div>
