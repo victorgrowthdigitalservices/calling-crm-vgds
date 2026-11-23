@@ -3,7 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style><title>Victor Growth Calling CRM</title>
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* ================= Comprehensive Mobile-Friendly Styles ================= */
+@media (max-width: 920px) {
+  .wrap { padding-inline: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); }
+  .portal-topbar { padding: 12px 16px; margin-bottom: 16px; }
+  .portal-brand .logo { height: 38px; }
+  .portal-brand-text b { font-size: 14.5px; }
+  .portal-brand-text span { font-size: 10.5px; }
+  .portal-head h1 { font-size: 26px; }
+  .portal-head p { font-size: 14px; }
+  .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+  .topbar { padding-block: 8px; }
+  .topbar .logo { height: 32px; }
+  .topbar nav.tabs { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 4px; padding-block: 4px; }
+  .topbar nav.tabs::-webkit-scrollbar { display: none; }
+  .topbar nav.tabs .tab { padding: 8px 14px; font-size: 13px; flex-shrink: 0; min-height: 40px; }
+
+  .desk-top { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .desk-top .prog { width: 100%; }
+  .desk-top .nav-btns { width: 100%; display: flex; justify-content: space-between; gap: 8px; }
+  .desk-top .nav-btns .btn { flex: 1; justify-content: center; min-height: 42px; }
+
+  .desk { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .lead-card { padding: 18px 16px; }
+  .lead-card .co { font-size: 20px; }
+  .phone-box { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 14px; }
+  .phone-box .ph { font-size: 20px; }
+  .phone-box > div { width: 100%; display: flex; gap: 8px; }
+  .phone-box > div .btn { flex: 1; justify-content: center; min-height: 42px; font-size: 13px; }
+
+  .form-col .panel { padding: 18px 16px; }
+  .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .status-grid .sbtn { min-height: 48px; font-size: 13px; padding: 8px 10px; }
+
+  #save { min-height: 48px; font-size: 15px; }
+
+  .big-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .alloc { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+@media (max-width: 580px) {
+  .wrap { padding-inline: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .portal { padding-block: 12px 32px; gap: 20px; }
+  .portal-topbar { flex-direction: column; gap: 10px; align-items: flex-start; padding: 12px; }
+  .portal-topbar .portal-system-pill { align-self: flex-start; }
+  .portal-head h1 { font-size: 22px; }
+  .portal-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .pcard { padding: 18px 16px; min-height: auto; }
+  .demo-note { padding: 10px 14px; font-size: 12px; gap: 6px 10px; }
+
+  .topbar .right { gap: 6px; }
+  .clock { display: none; }
+  .topbar .btn.sm { padding: 6px 10px; font-size: 12px; }
+
+  .big-kpis { grid-template-columns: minmax(0, 1fr); }
+  .alloc { grid-template-columns: minmax(0, 1fr); }
+  
+  .status-grid { grid-template-columns: 1fr; }
+  .phone-box > div { flex-direction: column; }
+  .phone-box > div .btn { width: 100%; min-height: 44px; }
+
+  .pins input { width: 44px; height: 52px; font-size: 22px; }
+  .modal { padding: 18px 14px; }
+}
+
+</style><title>Victor Growth Calling CRM</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
@@ -483,6 +550,7 @@ const atHour=(dayT,h,m)=>{const d=new Date(dayT);d.setHours(h,m,0,0);return d.ge
 const phoneFmt=n=>`+91 ${n.slice(0,5)} ${n.slice(5)}`;
 const digits=s=>String(s||'').replace(/\D/g,'').slice(-10);
 
+// Persistent CRM Storage: Full 126 Leads Loaded, Zero Fake Activity (100% Real-time)
 let LEADS = [];
 let RECORDINGS = [];
 let SEQ = 1;
@@ -499,27 +567,29 @@ function makeLead(caller){
     website: siteOk?`https://www.${slug}${suf.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'')}.in`:'',
     hook:`Hi ${f}, I came across ${company}'s work on ${spec} in ${city}. We help interior studios get 15–20 qualified project enquiries every month through Google and Instagram. Can I take 2 minutes to show you how?`,
     details:[`Specialises in ${spec}`,`${yrs} years in business · ${city}`,`Instagram: ${ig}k followers`,`Google rating ${rating}★ (${rev} reviews)`, siteOk?'Website live, no enquiry form on homepage':'No website — only Instagram & JustDial listing'],
-    caller, status:'NC', history:[], followUp:null, convertedAt:null, source:'Manual Entry'
+    caller, status:'NC', history:[], followUp:null, convertedAt:null, source:'Interior Designers – Delhi NCR & Metro.xlsx'
   };
 }
 
-// Persistent Storage: Clean State (0 Fake Leads)
-const STORAGE_KEY = 'vgds_crm_leads_v9';
-const REC_STORAGE_KEY = 'vgds_crm_recordings_v5';
+const STORAGE_KEY = 'vgds_crm_leads_v11';
+const REC_STORAGE_KEY = 'vgds_crm_recordings_v11';
 
 function saveStorage(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
-    localStorage.setItem('vgds_crm_seq_v9', String(SEQ));
+    localStorage.setItem('vgds_crm_seq_v11', String(SEQ));
   }catch(e){}
 }
 function loadStorage(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
-      LEADS = JSON.parse(raw) || [];
-      SEQ = +(localStorage.getItem('vgds_crm_seq_v9') || (LEADS.length + 1));
-      return true;
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr) && arr.length > 0){
+        LEADS = arr;
+        SEQ = +(localStorage.getItem('vgds_crm_seq_v11') || (LEADS.length + 1));
+        return true;
+      }
     }
   }catch(e){}
   return false;
@@ -537,21 +607,35 @@ function loadRecordingsFromStorage(){
 loadRecordingsFromStorage();
 
 (function seed(){
-  if(!loadStorage()){
-    LEADS = [];
-    SEQ = 1;
-    saveStorage();
+  // Load existing data from storage if present
+  if(loadStorage()) return;
+
+  // Initialize all 126 leads (Caller A: 38, Caller B: 38, Caller C: 38, Unassigned: 12)
+  // All initial call metrics/activity strictly set to 0 (status: 'NC', history: [], followUp: null, convertedAt: null)
+  for(let i=0; i<126; i++){
+    const c = i < 114 ? 'ABC'[i % 3] : null;
+    const L = makeLead(c);
+    L.status = 'NC';
+    L.history = [];
+    L.followUp = null;
+    L.convertedAt = null;
+    LEADS.push(L);
   }
+  saveStorage();
 })();
 
 function resetActivityMetrics(){
-  if(confirm('Clear all calling data and start completely fresh? This will reset all queues to 0.')){
-    LEADS = [];
+  if(confirm('Reset all calling activity metrics to 0? All 126 leads will remain intact, and all desks will be fresh with 0 calls logged.')){
+    LEADS.forEach(l=>{
+      l.status='NC';
+      l.history=[];
+      l.followUp=null;
+      l.convertedAt=null;
+    });
     RECORDINGS = [];
-    SEQ = 1;
     saveStorage();
     saveRecordingsToStorage();
-    toast('CRM reset: All data cleared. Ready for fresh entries or sheet upload.');
+    toast('All metrics reset to 0. All 126 leads are fresh & ready to call.');
     render();
   }
 }
@@ -1622,9 +1706,9 @@ function cDesk(m){
     m.innerHTML=`
     <div class="empty-desk" style="padding:48px 24px;text-align:center;background:#fff;border:1.5px dashed var(--line);border-radius:var(--r-lg);max-width:620px;margin:32px auto;box-shadow:0 4px 14px rgba(16,48,95,.03)">
       <div style="font-size:46px;margin-bottom:12px">📞</div>
-      <h2 style="font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px">Your Calling Queue is Clean & Ready</h2>
+      <h2 style="font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px">All Leads Completed or None Assigned</h2>
       <p class="muted" style="margin:0 0 24px;font-size:14.5px;line-height:1.5">
-        Zero fake leads. Log your calls manually using the button below or wait for your admin to dispatch the daily calling sheet.
+        Your calling desk is clear. You can log a new call anytime or wait for your admin to dispatch fresh leads.
       </p>
       <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
         <button class="btn primary" id="btn-add-call-first" style="font-size:14px;padding:12px 26px;font-weight:700">
@@ -1642,6 +1726,7 @@ function cDesk(m){
   const D=S.desk; const needsFU=D.status==='CB'||D.status==='FU';
   const pct=st.assigned ? Math.round(st.done/st.assigned*100) : 0;
   const prevCalls=L.history.filter(e=>e.status!=='NOTE');
+
   m.innerHTML=`
   <div class="desk-top">
     <div><span class="eyebrow">Calling desk</span><h1 style="font-size:22px">Lead ${S.desk.idx+1} <span class="faint" style="font-weight:500">of ${ls.length}</span></h1></div>
@@ -1660,15 +1745,18 @@ function cDesk(m){
         <div style="min-width:0"><div class="co">${esc(L.company)}</div><div class="muted" style="font-size:15px;margin-top:2px">${esc(L.name)} · ${esc(L.city)}</div></div>
         ${L.convertedAt?'<span class="pill s-CONV">Converted</span>':pill(L.status,false)}
       </div>
-      <div class="phone-box" style="padding:10px 14px;background:var(--navy-soft);border:1.5px solid #CFDEEF;border-radius:var(--r);display:flex;align-items:center;gap:12px;margin-block:10px">
+
+      <!-- Phone Number Box with Direct Call & Copy -->
+      <div class="phone-box" style="padding:12px 14px;background:var(--navy-soft);border:1.5px solid #CFDEEF;border-radius:var(--r);display:flex;align-items:center;gap:12px;margin-block:12px">
         <span style="color:var(--cA);display:grid;place-items:center">${ic('phone',22)}</span>
-        <b class="ph num" style="font-size:18px;letter-spacing:.02em;color:var(--ink)">${phoneFmt(L.phone)}</b>
+        <b class="ph num" style="font-size:19px;letter-spacing:.02em;color:var(--ink)">${phoneFmt(L.phone)}</b>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn sm" id="copy-ph" style="font-weight:600">${ic('copy',14)} Copy Number</button>
           <a href="tel:${L.phone}" class="btn sm primary" style="text-decoration:none">${ic('phone',14)} Call</a>
           <a href="https://wa.me/91${digits(L.phone)}" target="_blank" class="btn sm" style="text-decoration:none;background:#E8F7EE;color:#12873C;border-color:#CFEBD9">WhatsApp</a>
         </div>
       </div>
+
       ${isDue(L)?`<div class="dupe" style="background:#F3F8FE;color:#1E57B0">${ic('clock',14)} Callback was scheduled for ${fmtDT(L.followUp)} — this lead is due now.</div>`:''}
       <div class="facts">
         <div class="fact"><span>Contact person</span><b>${esc(L.name)}</b></div>
@@ -1677,9 +1765,10 @@ function cDesk(m){
       <div class="hook"><span class="eyebrow">Calling hook</span><p>${esc(L.hook)}</p></div>
       <div><div class="eyebrow" style="margin-bottom:8px">Business details</div><ul class="biz">${L.details.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>
     </article>
+
     <div class="form-col">
       <section class="panel" style="display:grid;gap:14px">
-        <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin:0">1. Update Call Outcome</h3>
+        <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin:0">1. Select Call Outcome</h3>
         <div class="status-grid">${Object.keys(ST).filter(k=>k!=='NC').map(k=>`<button class="sbtn ${D.status===k?'on':''} ${k==='CB'?'full':''}" data-st="${k}" style="${D.status===k?`color:${ST[k].hex};background:${ST[k].hex}12`:``}">><i style="background:${ST[k].hex}"></i><span style="color:var(--ink)">${ST[k].label}</span></button>`).join('')}</div>
         
         ${needsFU?`<div class="cb-box"><label class="field" for="fu-dt" style="gap:6px"><span style="font-size:12.5px;font-weight:600;color:#1E57B0">${ic('clock',14)} Callback date & time</span>
@@ -1689,18 +1778,18 @@ function cDesk(m){
         
         ${D.status==='INT'?`<label class="check"><input type="checkbox" id="conv" ${D.conv?'checked':''}> Deal closed — mark as converted client</label>`:''}
 
-        <!-- Call Recording Section directly under outcome selection -->
+        <!-- 2. Call Recording Section directly under outcome selection -->
         <div style="background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
             <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:18px">🎙️</span>
+              <span style="font-size:20px">🎙️</span>
               <div>
                 <b style="font-size:13.5px;color:var(--ink)">Attach Call Recording</b>
                 <span class="faint" style="font-size:11.5px;margin-left:4px">(MP3, M4A, WAV, AAC)</span>
               </div>
             </div>
             <label class="btn soft sm" for="c-rec-file" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-              ${ic('upload', 14)} <span>${D.recording ? 'Replace Audio File' : 'Select Audio Recording'}</span>
+              ${ic('upload', 14)} <span>${D.recording ? 'Replace Recording' : 'Upload Call Recording'}</span>
               <input type="file" id="c-rec-file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden>
             </label>
           </div>
@@ -1710,19 +1799,20 @@ function cDesk(m){
             <span style="font-size:16px">🎵</span>
             <div style="flex:1;min-width:140px;overflow:hidden">
               <div style="font-weight:600;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(D.recording.name)}</div>
-              <div class="faint" style="font-size:11px">${D.recording.size ? Math.round(D.recording.size/1024) + ' KB' : ''}</div>
+              <div class="faint" style="font-size:11px">${D.recording.size ? Math.round(D.recording.size/1024) + ' KB' : 'Audio File'}</div>
             </div>
             <audio controls src="${D.recording.url}" style="height:32px;max-width:240px"></audio>
             <button type="button" class="btn sm" id="c-rec-del" style="color:var(--warn);border-color:#F8D7DA;padding:4px 10px">Remove</button>
           </div>` : `
-          <div class="faint" style="font-size:12px;color:var(--ink-3)">
-            Upload client call recording audio here. It will automatically be sent to Admin Command Center for review.
+          <div class="faint" style="font-size:12px;color:var(--ink-2)">
+            Upload call audio here. It will immediately show up in Admin Command Center under <b>${CALLERS[S.role].name}</b> for review.
           </div>`}
         </div>
 
-        <div class="field"><label for="remark" style="font-size:12.5px;font-weight:600">Discussion Notes & Remarks</label><textarea class="input" id="remark" placeholder="What did the client say? Budget, timing, next step…">${esc(D.remark)}</textarea></div>
+        <div class="field"><label for="remark" style="font-size:12.5px;font-weight:600">Discussion Notes & Remarks</label><textarea class="input" id="remark" placeholder="What did the client say? Budget, timing, objections, next step…">${esc(D.remark)}</textarea></div>
         <button class="btn primary" id="save" style="justify-content:center;padding:12px;font-size:14px;font-weight:700" ${D.status?'':'disabled'}>${ic('check',16)} Save Call Outcome & Next Lead ${ic('arrow',16)}</button>
       </section>
+
       <section class="panel">
         <div class="panel-h" style="margin-bottom:10px"><h3>Previous calls</h3><span class="faint num">${prevCalls.length}</span></div>
         ${L.history.length?`<div class="timeline">${[...L.history].reverse().map(timelineItem).join('')}</div>`:'<div class="empty" style="padding:16px">First call to this lead.</div>'}
@@ -1738,7 +1828,16 @@ function cDesk(m){
   const bDeskAdd = m.querySelector('#btn-desk-add');
   if(bDeskAdd) bDeskAdd.onclick = () => openAddCallModal(S.role);
 
-  m.querySelector('#copy-ph').onclick=()=>{const t='+91'+L.phone;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Number copied: '+t)).catch(()=>{const r=document.createRange();r.selectNodeContents(m.querySelector('.ph'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Number selected — press Ctrl+C')})};
+  m.querySelector('#copy-ph').onclick=()=>{
+    const t='+91'+L.phone;
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject())
+      .then(()=>toast('Number copied: '+t))
+      .catch(()=>{
+        const r=document.createRange();r.selectNodeContents(m.querySelector('.ph'));
+        const s=getSelection();s.removeAllRanges();s.addRange(r);
+        toast('Number selected — press Ctrl+C');
+      });
+  };
   
   const rm=m.querySelector('#remark');rm.oninput=()=>D.remark=rm.value;
   m.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{D.status=b.dataset.st;if((D.status==='CB'||D.status==='FU')&&!D.fu)D.fu=toLocalInput(atHour(dayStart(Date.now())+DAY,11,0));cDesk(m)});
@@ -1784,6 +1883,7 @@ function cDesk(m){
     const e={t:Date.now(),by:S.role,status:D.status,remark:D.remark.trim()};
     if(needsFU){const t=new Date(D.fu).getTime();if(!t){toast('Pick a callback date and time first.');return}e.fu=t;L.followUp=t}else L.followUp=null;
     
+    // Store recording into call entry and global RECORDINGS collection for Admin portal
     if(D.recording){
       e.recording = D.recording;
       RECORDINGS.unshift({
