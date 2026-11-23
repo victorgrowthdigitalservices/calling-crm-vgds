@@ -483,7 +483,10 @@ const atHour=(dayT,h,m)=>{const d=new Date(dayT);d.setHours(h,m,0,0);return d.ge
 const phoneFmt=n=>`+91 ${n.slice(0,5)} ${n.slice(5)}`;
 const digits=s=>String(s||'').replace(/\D/g,'').slice(-10);
 
-let LEADS=[], SEQ=1;
+let LEADS = [];
+let RECORDINGS = [];
+let SEQ = 1;
+
 function makeLead(caller){
   const f=pick(FIRST), l=pick(LAST), b=pick(BRAND), suf=pick(SUFFIX), city=pick(CITIES), spec=pick(SPEC);
   const company=`${b} ${suf}`;
@@ -496,12 +499,32 @@ function makeLead(caller){
     website: siteOk?`https://www.${slug}${suf.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'')}.in`:'',
     hook:`Hi ${f}, I came across ${company}'s work on ${spec} in ${city}. We help interior studios get 15–20 qualified project enquiries every month through Google and Instagram. Can I take 2 minutes to show you how?`,
     details:[`Specialises in ${spec}`,`${yrs} years in business · ${city}`,`Instagram: ${ig}k followers`,`Google rating ${rating}★ (${rev} reviews)`, siteOk?'Website live, no enquiry form on homepage':'No website — only Instagram & JustDial listing'],
-    caller, status:'NC', history:[], followUp:null, convertedAt:null, source:'Interior Designers – Delhi NCR & Metro.xlsx'
+    caller, status:'NC', history:[], followUp:null, convertedAt:null, source:'Manual Entry'
   };
 }
 
-let RECORDINGS = [];
-const REC_STORAGE_KEY = 'vgds_crm_recordings_v2';
+// Persistent Storage: Clean State (0 Fake Leads)
+const STORAGE_KEY = 'vgds_crm_leads_v9';
+const REC_STORAGE_KEY = 'vgds_crm_recordings_v5';
+
+function saveStorage(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
+    localStorage.setItem('vgds_crm_seq_v9', String(SEQ));
+  }catch(e){}
+}
+function loadStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      LEADS = JSON.parse(raw) || [];
+      SEQ = +(localStorage.getItem('vgds_crm_seq_v9') || (LEADS.length + 1));
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 function saveRecordingsToStorage(){
   try{ localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(RECORDINGS)); }catch(e){}
 }
@@ -513,58 +536,22 @@ function loadRecordingsFromStorage(){
 }
 loadRecordingsFromStorage();
 
-// Persistent CRM Storage: All 126 Leads intact, Zero fake activity, 100% Real-time
-const STORAGE_KEY = 'vgds_crm_leads_v5';
-function saveStorage(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
-    localStorage.setItem('vgds_crm_seq_v5', String(SEQ));
-  }catch(e){}
-}
-function loadStorage(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const data = JSON.parse(raw);
-      if(Array.isArray(data) && data.length > 0){
-        LEADS = data;
-        SEQ = +(localStorage.getItem('vgds_crm_seq_v5') || (LEADS.length + 1));
-        return true;
-      }
-    }
-  }catch(e){}
-  return false;
-}
-
 (function seed(){
-  // Check if valid data exists in storage
-  if(loadStorage()) return;
-
-  // Otherwise initialize the complete 126 lead database:
-  // Caller A: 38 leads, Caller B: 38 leads, Caller C: 38 leads, Pool: 12 leads
-  // All initial call metrics/history strictly set to 0
-  for(let i=0;i<126;i++){
-    const c=i<114?'ABC'[i%3]:null;
-    const L=makeLead(c);
-    L.status='NC';
-    L.history=[];
-    L.followUp=null;
-    L.convertedAt=null;
-    LEADS.push(L);
+  if(!loadStorage()){
+    LEADS = [];
+    SEQ = 1;
+    saveStorage();
   }
-  saveStorage();
 })();
 
 function resetActivityMetrics(){
-  if(confirm('Are you sure you want to reset all activity metrics to 0? All 126 leads will remain safely in the CRM, and all calling queues will reset to 0 calls logged.')){
-    LEADS.forEach(l=>{
-      l.status='NC';
-      l.history=[];
-      l.followUp=null;
-      l.convertedAt=null;
-    });
+  if(confirm('Clear all calling data and start completely fresh? This will reset all queues to 0.')){
+    LEADS = [];
+    RECORDINGS = [];
+    SEQ = 1;
     saveStorage();
-    toast('All metrics reset to 0. All 126 leads are fresh & ready to call.');
+    saveRecordingsToStorage();
+    toast('CRM reset: All data cleared. Ready for fresh entries or sheet upload.');
     render();
   }
 }
@@ -671,6 +658,274 @@ function renderPortal(){
   </div>`;
   app.querySelectorAll('[data-portal]').forEach(b=>b.onclick=()=>openPass(b.dataset.portal));
 }
+
+/* ======================= Add Call / Lead Modal ======================= */
+function openAddCallModal(defaultCaller){
+  const caller = defaultCaller || (S.role !== 'admin' ? S.role : 'A');
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  let modalRec = null;
+
+  ov.innerHTML = `
+  <div class="modal" style="width:min(580px,96%);max-height:92vh;overflow-y:auto;padding:24px 22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="badge-ic" style="background:${caller==='admin'?'var(--green-soft)':CALLERS[caller].soft};color:${caller==='admin'?'var(--green-600)':CALLERS[caller].color};width:38px;height:38px;border-radius:10px">
+          ${ic('phone',20)}
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:17px;font-weight:700;color:var(--ink)">Log New Call / Add Lead</h3>
+          <div class="faint" style="font-size:12px">Desk: <b>${caller==='admin'?'Master Pool':CALLERS[caller].name}</b></div>
+        </div>
+      </div>
+      <button type="button" class="btn sm" id="m-add-close" style="padding:4px 8px">✕</button>
+    </div>
+
+    <form id="m-add-form" style="display:grid;gap:12px" autocomplete="off">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">Company / Studio Name *</span>
+          <input class="input" id="m-company" placeholder="e.g. Skyline Interiors" required>
+        </label>
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">Contact Person Name</span>
+          <input class="input" id="m-name" placeholder="e.g. Rajesh Kumar">
+        </label>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:10px">
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">Phone Number * (10 Digits)</span>
+          <input class="input num" id="m-phone" placeholder="e.g. 9811223344" type="tel" required>
+        </label>
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">City / Location</span>
+          <input class="input" id="m-city" placeholder="e.g. Delhi NCR">
+        </label>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">Website / Link (Optional)</span>
+          <input class="input" id="m-website" placeholder="https://...">
+        </label>
+        <label class="field">
+          <span style="font-size:12px;font-weight:600">Assign To Caller</span>
+          <select class="select" id="m-caller" style="padding-block:7px">
+            ${'ABC'.split('').map(c=>`<option value="${c}" ${c===caller?'selected':''}>${CALLERS[c].name}</option>`).join('')}
+            <option value="" ${!caller?'selected':''}>Unassigned Pool</option>
+          </select>
+        </label>
+      </div>
+
+      <div style="border-top:1px dashed var(--line);padding-top:12px">
+        <label class="field" style="margin-bottom:8px">
+          <span style="font-size:12.5px;font-weight:700;color:var(--ink)">Call Outcome / Status</span>
+          <select class="select" id="m-status" style="font-weight:600">
+            <option value="INT">🎯 Interested / Serious Client</option>
+            <option value="CB">📞 Busy – Call Back Later</option>
+            <option value="FU">🔔 Follow-Up Required</option>
+            <option value="CONV">🏆 Converted Client</option>
+            <option value="NI">❌ Not Interested</option>
+            <option value="NR">📵 No Answer / Ringing</option>
+            <option value="NRCH">📴 Not Reachable / Switch Off</option>
+            <option value="NC">⏳ Fresh Lead (Not Called Yet)</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="m-fu-wrap" style="display:none;background:var(--navy-soft);padding:10px 12px;border-radius:8px">
+        <label class="field">
+          <span style="font-size:12px;font-weight:600;color:var(--ink)">📅 Callback Date & Time</span>
+          <input type="datetime-local" class="input" id="m-fu-dt">
+        </label>
+      </div>
+
+      <!-- Call Recording Audio Upload -->
+      <div style="background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--r);padding:12px;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">🎙️</span>
+            <div>
+              <b style="font-size:13px;color:var(--ink)">Call Recording Audio</b>
+              <span class="faint" style="font-size:11.5px;margin-left:4px">(MP3, M4A, WAV, AAC)</span>
+            </div>
+          </div>
+          <label class="btn soft sm" for="m-rec-file" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            ${ic('upload', 14)} <span id="m-rec-lbl">Attach Audio Recording</span>
+            <input type="file" id="m-rec-file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden>
+          </label>
+        </div>
+
+        <div id="m-rec-box" style="display:none;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 10px">
+          <span style="font-size:16px">🎵</span>
+          <div style="flex:1;overflow:hidden">
+            <div id="m-rec-name" style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">audio.mp3</div>
+            <div id="m-rec-size" class="faint" style="font-size:10.5px">120 KB</div>
+          </div>
+          <audio id="m-rec-player" controls style="height:30px;max-width:200px"></audio>
+          <button type="button" class="btn sm" id="m-rec-del" style="color:var(--warn);padding:3px 8px">✕</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span style="font-size:12px;font-weight:600">Discussion Notes / Remarks</span>
+        <textarea class="input" id="m-remark" rows="2" placeholder="Key points discussed, client budget, requirements..."></textarea>
+      </label>
+
+      <div class="row" style="margin-top:4px">
+        <button type="button" class="btn" id="m-add-cancel">Cancel</button>
+        <button type="submit" class="btn primary" id="m-add-submit" style="padding-inline:20px">
+          💾 Save Call & Add to Queue
+        </button>
+      </div>
+    </form>
+  </div>
+  `;
+
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.querySelector('#m-add-close').onclick = close;
+  ov.querySelector('#m-add-cancel').onclick = close;
+  ov.addEventListener('click', e => { if(e.target === ov) close(); });
+
+  const statusSel = ov.querySelector('#m-status');
+  const fuWrap = ov.querySelector('#m-fu-wrap');
+  statusSel.onchange = () => {
+    fuWrap.style.display = (statusSel.value === 'CB' || statusSel.value === 'FU') ? 'block' : 'none';
+  };
+
+  const recFileIn = ov.querySelector('#m-rec-file');
+  const recBox = ov.querySelector('#m-rec-box');
+  const recName = ov.querySelector('#m-rec-name');
+  const recSize = ov.querySelector('#m-rec-size');
+  const recPlayer = ov.querySelector('#m-rec-player');
+  const recDel = ov.querySelector('#m-rec-del');
+  const recLbl = ov.querySelector('#m-rec-lbl');
+
+  recFileIn.onchange = () => {
+    const file = recFileIn.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      modalRec = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: ev.target.result,
+        uploadedAt: Date.now()
+      };
+      recName.textContent = file.name;
+      recSize.textContent = Math.round(file.size / 1024) + ' KB';
+      recPlayer.src = ev.target.result;
+      recBox.style.display = 'flex';
+      recLbl.textContent = 'Change Audio';
+
+      try {
+        const fd = new FormData();
+        fd.append('recording', file);
+        fetch('/api/recordings/upload', { method: 'POST', body: fd })
+          .then(r => r.json())
+          .then(d => { if(d.url) modalRec.serverUrl = d.url; })
+          .catch(()=>{});
+      } catch(e){}
+    };
+    reader.readAsDataURL(file);
+  };
+
+  recDel.onclick = () => {
+    modalRec = null;
+    recFileIn.value = '';
+    recPlayer.src = '';
+    recBox.style.display = 'none';
+    recLbl.textContent = 'Attach Audio Recording';
+  };
+
+  ov.querySelector('#m-add-form').onsubmit = e => {
+    e.preventDefault();
+    const company = ov.querySelector('#m-company').value.trim();
+    const name = ov.querySelector('#m-name').value.trim();
+    const phone = digits(ov.querySelector('#m-phone').value);
+    const city = ov.querySelector('#m-city').value.trim() || 'Delhi NCR';
+    const website = ov.querySelector('#m-website').value.trim();
+    const assigned = ov.querySelector('#m-caller').value || null;
+    const status = ov.querySelector('#m-status').value;
+    const remark = ov.querySelector('#m-remark').value.trim();
+    const fuVal = ov.querySelector('#m-fu-dt').value;
+
+    if(!company){ toast('Company name is required.'); return; }
+    if(phone.length < 10){ toast('Please enter a valid 10-digit phone number.'); return; }
+
+    const newLead = {
+      id: SEQ++,
+      name: name || company,
+      first: (name || company).split(' ')[0],
+      company,
+      phone,
+      city,
+      website,
+      hook: `Hi ${name || company}, we help interior & design studios get qualified project inquiries.`,
+      details: [`Added manually · ${city}`],
+      caller: assigned,
+      status: status,
+      history: [],
+      followUp: null,
+      convertedAt: null,
+      source: 'Manual Call Entry'
+    };
+
+    if(status !== 'NC'){
+      let fuTime = null;
+      if((status === 'CB' || status === 'FU') && fuVal){
+        fuTime = new Date(fuVal).getTime();
+        newLead.followUp = fuTime;
+      }
+      if(status === 'CONV') newLead.convertedAt = Date.now();
+
+      const callEntry = {
+        t: Date.now(),
+        by: assigned || S.role || 'A',
+        status: status,
+        remark: remark || `Call logged as ${SHORT[status] || status}`,
+        fu: fuTime
+      };
+
+      if(modalRec){
+        callEntry.recording = modalRec;
+        RECORDINGS.unshift({
+          id: 'rec-' + Date.now(),
+          caller: assigned || S.role || 'A',
+          leadId: newLead.id,
+          company: newLead.company,
+          name: newLead.name,
+          phone: newLead.phone,
+          city: newLead.city,
+          status: status,
+          remark: callEntry.remark,
+          date: Date.now(),
+          file: modalRec.name,
+          size: modalRec.size,
+          url: modalRec.serverUrl || modalRec.url
+        });
+        saveRecordingsToStorage();
+      }
+
+      newLead.history.push(callEntry);
+    }
+
+    LEADS.unshift(newLead);
+    saveStorage();
+    close();
+    toast(`Call logged for ${company}! Added to ${assigned ? CALLERS[assigned].name : 'Unassigned'}.`);
+
+    if(S.role === assigned){
+      S.desk.idx = 0;
+      S.tab = 'desk';
+    }
+    render();
+  };
+}
+
 function openPass(role){
   const title=role==='admin'?'Admin Portal':CALLERS[role].name;
   const ov=document.createElement('div');ov.className='overlay';
@@ -1363,12 +1618,29 @@ const myLeads=()=>LEADS.filter(l=>l.caller===S.role);
 function firstQueueIdx(c){const ls=LEADS.filter(l=>l.caller===c);let i=ls.findIndex(isDue);if(i<0)i=ls.findIndex(l=>l.status==='NC');return Math.max(0,i)}
 function cDesk(m){
   const ls=myLeads();
-  if(!ls.length){m.innerHTML='<div class="empty">No leads assigned yet. Your admin will allocate leads to you.</div>';return}
+  if(!ls.length){
+    m.innerHTML=`
+    <div class="empty-desk" style="padding:48px 24px;text-align:center;background:#fff;border:1.5px dashed var(--line);border-radius:var(--r-lg);max-width:620px;margin:32px auto;box-shadow:0 4px 14px rgba(16,48,95,.03)">
+      <div style="font-size:46px;margin-bottom:12px">📞</div>
+      <h2 style="font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px">Your Calling Queue is Clean & Ready</h2>
+      <p class="muted" style="margin:0 0 24px;font-size:14.5px;line-height:1.5">
+        Zero fake leads. Log your calls manually using the button below or wait for your admin to dispatch the daily calling sheet.
+      </p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+        <button class="btn primary" id="btn-add-call-first" style="font-size:14px;padding:12px 26px;font-weight:700">
+          ➕ Log New Call / Lead
+        </button>
+      </div>
+    </div>`;
+    const bFirst = m.querySelector('#btn-add-call-first');
+    if(bFirst) bFirst.onclick = () => openAddCallModal(S.role);
+    return;
+  }
   if(S.desk.idx>=ls.length)S.desk.idx=0;
   const L=ls[S.desk.idx], st=stats(S.role,...todayRange());
   const dueN=ls.filter(isDue).length;
   const D=S.desk; const needsFU=D.status==='CB'||D.status==='FU';
-  const pct=Math.round(st.done/st.assigned*100);
+  const pct=st.assigned ? Math.round(st.done/st.assigned*100) : 0;
   const prevCalls=L.history.filter(e=>e.status!=='NOTE');
   m.innerHTML=`
   <div class="desk-top">
@@ -1376,7 +1648,11 @@ function cDesk(m){
     <div class="prog"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="muted"><b class="num" style="color:var(--ink)">${st.done}</b> done · <b class="num" style="color:var(--ink)">${st.remaining}</b> left to call · <b class="num" style="color:var(--ink)">${st.calls}</b> calls today</span><span class="num">${pct}%</span></div>
       <div class="bar"><span style="width:${pct}%;background:${CALLERS[S.role].hex}"></span></div></div>
     ${dueN?`<button class="btn" id="go-due" style="border-color:#F3C7C4;color:var(--warn);background:var(--warn-soft)">${ic('bell',16)} ${dueN} follow-up${dueN>1?'s':''} due</button>`:''}
-    <div class="nav-btns"><button class="btn" id="prev" ${S.desk.idx===0?'disabled':''}>${ic('left',16)} Previous</button><button class="btn" id="next">Skip ${ic('arrow',16)}</button></div>
+    <div class="nav-btns">
+      <button class="btn" id="btn-desk-add" style="font-weight:700">${ic('plus',14)} Add Call</button>
+      <button class="btn" id="prev" ${S.desk.idx===0?'disabled':''}>${ic('left',16)} Previous</button>
+      <button class="btn" id="next">Skip ${ic('arrow',16)}</button>
+    </div>
   </div>
   <div class="desk">
     <article class="lead-card">
@@ -1384,7 +1660,15 @@ function cDesk(m){
         <div style="min-width:0"><div class="co">${esc(L.company)}</div><div class="muted" style="font-size:15px;margin-top:2px">${esc(L.name)} · ${esc(L.city)}</div></div>
         ${L.convertedAt?'<span class="pill s-CONV">Converted</span>':pill(L.status,false)}
       </div>
-      <div class="phone-box">${ic('phone',22)}<span class="ph">${phoneFmt(L.phone)}</span><button class="btn sm" id="copy-ph" style="margin-left:auto">${ic('copy',14)} Copy</button></div>
+      <div class="phone-box" style="padding:10px 14px;background:var(--navy-soft);border:1.5px solid #CFDEEF;border-radius:var(--r);display:flex;align-items:center;gap:12px;margin-block:10px">
+        <span style="color:var(--cA);display:grid;place-items:center">${ic('phone',22)}</span>
+        <b class="ph num" style="font-size:18px;letter-spacing:.02em;color:var(--ink)">${phoneFmt(L.phone)}</b>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn sm" id="copy-ph" style="font-weight:600">${ic('copy',14)} Copy Number</button>
+          <a href="tel:${L.phone}" class="btn sm primary" style="text-decoration:none">${ic('phone',14)} Call</a>
+          <a href="https://wa.me/91${digits(L.phone)}" target="_blank" class="btn sm" style="text-decoration:none;background:#E8F7EE;color:#12873C;border-color:#CFEBD9">WhatsApp</a>
+        </div>
+      </div>
       ${isDue(L)?`<div class="dupe" style="background:#F3F8FE;color:#1E57B0">${ic('clock',14)} Callback was scheduled for ${fmtDT(L.followUp)} — this lead is due now.</div>`:''}
       <div class="facts">
         <div class="fact"><span>Contact person</span><b>${esc(L.name)}</b></div>
@@ -1395,15 +1679,49 @@ function cDesk(m){
     </article>
     <div class="form-col">
       <section class="panel" style="display:grid;gap:14px">
-        <h3 style="font-size:16px">Update call status</h3>
-        <div class="status-grid">${Object.keys(ST).filter(k=>k!=='NC').map(k=>`<button class="sbtn ${D.status===k?'on':''} ${k==='CB'?'full':''}" data-st="${k}" style="${D.status===k?`color:${ST[k].hex};background:${ST[k].hex}12`:''}"><i style="background:${ST[k].hex}"></i><span style="color:var(--ink)">${ST[k].label}</span></button>`).join('')}</div>
+        <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin:0">1. Update Call Outcome</h3>
+        <div class="status-grid">${Object.keys(ST).filter(k=>k!=='NC').map(k=>`<button class="sbtn ${D.status===k?'on':''} ${k==='CB'?'full':''}" data-st="${k}" style="${D.status===k?`color:${ST[k].hex};background:${ST[k].hex}12`:``}">><i style="background:${ST[k].hex}"></i><span style="color:var(--ink)">${ST[k].label}</span></button>`).join('')}</div>
+        
         ${needsFU?`<div class="cb-box"><label class="field" for="fu-dt" style="gap:6px"><span style="font-size:12.5px;font-weight:600;color:#1E57B0">${ic('clock',14)} Callback date & time</span>
           <input type="datetime-local" class="input" id="fu-dt" value="${D.fu}"></label>
           <div class="quick">${[['In 2 hrs',2*3600e3],['Tomorrow 11 am','t11'],['Tomorrow 5 pm','t17'],['In 3 days','d3']].map(([l,v])=>`<button class="chip" data-q="${v}">${l}</button>`).join('')}</div>
           <span class="faint" style="font-size:12px">The lead moves to your Follow-ups list and shows up when it's due.</span></div>`:''}
+        
         ${D.status==='INT'?`<label class="check"><input type="checkbox" id="conv" ${D.conv?'checked':''}> Deal closed — mark as converted client</label>`:''}
-        <div class="field"><label for="remark">Remarks</label><textarea class="input" id="remark" placeholder="What did the client say? Budget, timing, next step…">${esc(D.remark)}</textarea></div>
-        <button class="btn primary" id="save" style="justify-content:center;padding:11px" ${D.status?'':'disabled'}>${ic('check',16)} Save & next lead</button>
+
+        <!-- Call Recording Section directly under outcome selection -->
+        <div style="background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">🎙️</span>
+              <div>
+                <b style="font-size:13.5px;color:var(--ink)">Attach Call Recording</b>
+                <span class="faint" style="font-size:11.5px;margin-left:4px">(MP3, M4A, WAV, AAC)</span>
+              </div>
+            </div>
+            <label class="btn soft sm" for="c-rec-file" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+              ${ic('upload', 14)} <span>${D.recording ? 'Replace Audio File' : 'Select Audio Recording'}</span>
+              <input type="file" id="c-rec-file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg" hidden>
+            </label>
+          </div>
+
+          ${D.recording ? `
+          <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;flex-wrap:wrap">
+            <span style="font-size:16px">🎵</span>
+            <div style="flex:1;min-width:140px;overflow:hidden">
+              <div style="font-weight:600;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(D.recording.name)}</div>
+              <div class="faint" style="font-size:11px">${D.recording.size ? Math.round(D.recording.size/1024) + ' KB' : ''}</div>
+            </div>
+            <audio controls src="${D.recording.url}" style="height:32px;max-width:240px"></audio>
+            <button type="button" class="btn sm" id="c-rec-del" style="color:var(--warn);border-color:#F8D7DA;padding:4px 10px">Remove</button>
+          </div>` : `
+          <div class="faint" style="font-size:12px;color:var(--ink-3)">
+            Upload client call recording audio here. It will automatically be sent to Admin Command Center for review.
+          </div>`}
+        </div>
+
+        <div class="field"><label for="remark" style="font-size:12.5px;font-weight:600">Discussion Notes & Remarks</label><textarea class="input" id="remark" placeholder="What did the client say? Budget, timing, next step…">${esc(D.remark)}</textarea></div>
+        <button class="btn primary" id="save" style="justify-content:center;padding:12px;font-size:14px;font-weight:700" ${D.status?'':'disabled'}>${ic('check',16)} Save Call Outcome & Next Lead ${ic('arrow',16)}</button>
       </section>
       <section class="panel">
         <div class="panel-h" style="margin-bottom:10px"><h3>Previous calls</h3><span class="faint num">${prevCalls.length}</span></div>
@@ -1411,23 +1729,86 @@ function cDesk(m){
       </section>
     </div>
   </div>`;
-  const go=i=>{S.desk={idx:i,status:null,remark:'',fu:'',conv:false};cDesk(m);window.scrollTo({top:0,behavior:'smooth'})};
+
+  const go=i=>{S.desk={idx:i,status:null,remark:'',fu:'',conv:false,recording:null};cDesk(m);window.scrollTo({top:0,behavior:'smooth'})};
   m.querySelector('#prev').onclick=()=>go(Math.max(0,S.desk.idx-1));
   m.querySelector('#next').onclick=()=>go((S.desk.idx+1)%ls.length);
   const gd=m.querySelector('#go-due');if(gd)gd.onclick=()=>{S.tab='follow';render()};
-  m.querySelector('#copy-ph').onclick=()=>{const t='+91'+L.phone;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Number copied')).catch(()=>{const r=document.createRange();r.selectNodeContents(m.querySelector('.ph'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Number selected — press Ctrl+C')})};
+  
+  const bDeskAdd = m.querySelector('#btn-desk-add');
+  if(bDeskAdd) bDeskAdd.onclick = () => openAddCallModal(S.role);
+
+  m.querySelector('#copy-ph').onclick=()=>{const t='+91'+L.phone;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Number copied: '+t)).catch(()=>{const r=document.createRange();r.selectNodeContents(m.querySelector('.ph'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Number selected — press Ctrl+C')})};
+  
   const rm=m.querySelector('#remark');rm.oninput=()=>D.remark=rm.value;
   m.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{D.status=b.dataset.st;if((D.status==='CB'||D.status==='FU')&&!D.fu)D.fu=toLocalInput(atHour(dayStart(Date.now())+DAY,11,0));cDesk(m)});
   const fd=m.querySelector('#fu-dt');if(fd)fd.onchange=()=>D.fu=fd.value;
   m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const v=b.dataset.q,n=Date.now();const t=v==='t11'?atHour(dayStart(n)+DAY,11,0):v==='t17'?atHour(dayStart(n)+DAY,17,0):v==='d3'?atHour(dayStart(n)+3*DAY,11,0):n+(+v);D.fu=toLocalInput(t);cDesk(m)});
   const cv=m.querySelector('#conv');if(cv)cv.onchange=()=>D.conv=cv.checked;
+
+  // Recording file handler
+  const cRecFile = m.querySelector('#c-rec-file');
+  if(cRecFile){
+    cRecFile.onchange = () => {
+      const file = cRecFile.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        D.recording = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: ev.target.result,
+          uploadedAt: Date.now()
+        };
+        try {
+          const fd = new FormData();
+          fd.append('recording', file);
+          fetch('/api/recordings/upload', { method: 'POST', body: fd })
+            .then(res => res.json())
+            .then(data => { if(data.url) D.recording.serverUrl = data.url; })
+            .catch(()=>{});
+        } catch(err){}
+        cDesk(m);
+      };
+      reader.readAsDataURL(file);
+    };
+  }
+  const cRecDel = m.querySelector('#c-rec-del');
+  if(cRecDel){
+    cRecDel.onclick = () => { D.recording = null; cDesk(m); };
+  }
+
   m.querySelector('#save').onclick=()=>{
     if(!D.status)return;
     const e={t:Date.now(),by:S.role,status:D.status,remark:D.remark.trim()};
     if(needsFU){const t=new Date(D.fu).getTime();if(!t){toast('Pick a callback date and time first.');return}e.fu=t;L.followUp=t}else L.followUp=null;
+    
+    if(D.recording){
+      e.recording = D.recording;
+      RECORDINGS.unshift({
+        id: 'rec-' + Date.now(),
+        caller: S.role,
+        leadId: L.id,
+        company: L.company,
+        name: L.name,
+        phone: L.phone,
+        city: L.city,
+        status: D.status,
+        remark: D.remark.trim(),
+        date: Date.now(),
+        file: D.recording.name,
+        size: D.recording.size,
+        url: D.recording.serverUrl || D.recording.url
+      });
+      saveRecordingsToStorage();
+    }
+    
     L.history.push(e);L.status=D.status;
     if(D.status==='INT'&&D.conv)L.convertedAt=Date.now();
-    saveStorage(); toast(`Saved: ${L.company} → ${SHORT[D.status]}`);
+    saveStorage();
+    D.recording = null;
+    toast(`Saved: ${L.company} → ${SHORT[D.status]}`);
     const nx=ls.findIndex((l,i)=>i>S.desk.idx&&(l.status==='NC'||isDue(l)));
     go(nx>=0?nx:(S.desk.idx+1)%ls.length);
     render();
