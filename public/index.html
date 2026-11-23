@@ -408,6 +408,9 @@ textarea.input{min-height:84px;resize:vertical}
 <script>
 /* ======================= Icons ======================= */
 const ICON={
+ mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>',
+ play:'<polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
  shield:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
  headset:'<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20a3 3 0 0 1-3 2h-2"/>',
  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
@@ -496,6 +499,20 @@ function makeLead(caller){
     caller, status:'NC', history:[], followUp:null, convertedAt:null, source:'Interior Designers – Delhi NCR & Metro.xlsx'
   };
 }
+
+let RECORDINGS = [];
+const REC_STORAGE_KEY = 'vgds_crm_recordings_v2';
+function saveRecordingsToStorage(){
+  try{ localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(RECORDINGS)); }catch(e){}
+}
+function loadRecordingsFromStorage(){
+  try{
+    const raw = localStorage.getItem(REC_STORAGE_KEY);
+    if(raw){ RECORDINGS = JSON.parse(raw) || []; }
+  }catch(e){ RECORDINGS = []; }
+}
+loadRecordingsFromStorage();
+
 // Persistent CRM Storage: All 126 Leads intact, Zero fake activity, 100% Real-time
 const STORAGE_KEY = 'vgds_crm_leads_v5';
 function saveStorage(){
@@ -590,7 +607,8 @@ const S={role:null,tab:null,pass:null,
   leadFilter:{q:'',caller:'all',status:'all'},selected:new Set(),importRes:null,
   rep:{range:'daily',caller:'all',from:'',to:''},
   hist:{q:'',f:'all',id:null},
-  desk:{idx:0,status:null,remark:'',fu:'',conv:false},
+  desk:{idx:0,status:null,remark:'',fu:'',conv:false,recording:null},
+  recFilter:{caller:'all',status:'all',q:''},
   myFilter:'all', fresh:new Set()
 };
 const app=document.getElementById('app');
@@ -692,6 +710,7 @@ const ADMIN_TABS=[
   ['dispatch','📥 Upload Sheet & Dispatch','upload'],
   ['live','📊 Live Monitor','live'],
   ['leads','👥 All Leads & Allocation','users'],
+  ['recordings','🎙️ Call Recordings','mic'],
   ['reports','📈 Performance Reports','chart'],
   ['history','🕒 Lead History','history']
 ];
@@ -732,7 +751,7 @@ function tickClock(){const c=document.getElementById('clock');if(c)c.textContent
 setInterval(tickClock,20e3);
 function renderTab(){
   const m=document.getElementById('main');
-  const f={dispatch:aDispatch,live:aLive,leads:aLeads,reports:aReports,history:aHistory,desk:cDesk,mine:cMine,follow:cFollow,perf:cPerf}[S.tab];
+  const f={dispatch:aDispatch,live:aLive,leads:aLeads,recordings:aRecordings,reports:aReports,history:aHistory,desk:cDesk,mine:cMine,follow:cFollow,perf:cPerf}[S.tab];
   if(f) f(m);
 }
 const av=(c,s='')=>`<span class="avatar ${s}" style="background:${CALLERS[c].soft};color:${CALLERS[c].color}">${c}</span>`;
@@ -999,18 +1018,7 @@ function aLive(m){
   m.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.goto;S.hist.f='fu';render()});
 }
 /* simulated live calls while admin watches */
-setInterval(()=>{
-  if(S.role!=='admin')return;
-  const c=pick(['A','B','C']);
-  const pool=LEADS.filter(l=>l.caller===c&&['NC','NR','CB','FU'].includes(l.status));
-  if(!pool.length)return;
-  const l=pick(pool), s=wpick({NR:24,NRCH:7,INT:16,CB:14,NI:22,FU:17});
-  const e={t:Date.now(),by:c,status:s,remark:pick(REMARK[s])};
-  if(s==='CB'||s==='FU'){e.fu=atHour(dayStart(Date.now())+DAY*(1+Math.floor(R()*3)),11,0);l.followUp=e.fu}else l.followUp=null;
-  l.history.push(e);l.status=s;
-  S.fresh=new Set([e.t+'-'+l.id]);
-  if(S.tab==='live'){const y=window.scrollY;renderTab();window.scrollTo(0,y)}
-},9000);
+/* Automatic simulation timer removed: All call metrics are 100% real-time and start at 0 */
 
 /* ======================= ADMIN: Leads & Allocation ======================= */
 function filteredLeads(){
@@ -1144,6 +1152,128 @@ function chartSVG(from,to,callers){
     if(i%every===0)g+=`<text x="${ml+i*gw+gw/2}" y="${H-10}" text-anchor="middle" font-size="11" fill="#8593A8">${buckets[i][2]}</text>`});
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calls per ${S.rep.range==='daily'?'hour':'day'} by caller">${g}</svg>`;
 }
+
+/* ======================= ADMIN: Call Audio Recordings ======================= */
+function aRecordings(m){
+  const filter = S.recFilter;
+  const q = (filter.q || '').trim().toLowerCase();
+  
+  let rows = RECORDINGS.filter(r => {
+    if(filter.caller !== 'all' && r.caller !== filter.caller) return false;
+    if(filter.status !== 'all' && r.status !== filter.status) return false;
+    if(q){
+      const match = (r.company + ' ' + r.name + ' ' + r.phone + ' ' + (r.remark||'')).toLowerCase();
+      if(!match.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const countTotal = RECORDINGS.length;
+  const countA = RECORDINGS.filter(r => r.caller === 'A').length;
+  const countB = RECORDINGS.filter(r => r.caller === 'B').length;
+  const countC = RECORDINGS.filter(r => r.caller === 'C').length;
+
+  m.innerHTML = `
+  <div class="page-head">
+    <div>
+      <h1>🎙️ Team Call Recordings</h1>
+      <p>Listen to authentic voice call recordings uploaded by Caller A, Caller B, and Caller C directly inside your browser.</p>
+    </div>
+    <span class="faint num" style="font-size:13px">${countTotal} Total Recordings Uploaded</span>
+  </div>
+
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ${filter.caller==='all'?'primary':''}" id="rf-all">All Callers (${countTotal})</button>
+        <button class="btn ${filter.caller==='A'?'primary':''}" id="rf-a">${av('A')} Caller A (${countA})</button>
+        <button class="btn ${filter.caller==='B'?'primary':''}" id="rf-b">${av('B')} Caller B (${countB})</button>
+        <button class="btn ${filter.caller==='C'?'primary':''}" id="rf-c">${av('C')} Caller C (${countC})</button>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select class="select" id="rf-status">
+          <option value="all" ${filter.status==='all'?'selected':''}>All Outcomes</option>
+          ${Object.keys(ST).map(k=>`<option value="${k}" ${filter.status===k?'selected':''}>${ST[k].label}</option>`).join('')}
+        </select>
+        <input class="input" id="rf-q" placeholder="Search company, caller, phone..." value="${esc(filter.q)}" style="width:230px">
+      </div>
+    </div>
+
+    ${rows.length === 0 ? `
+    <div class="empty" style="padding:48px 20px;text-align:center;background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--r-lg)">
+      <div style="font-size:42px;margin-bottom:12px">🎙️</div>
+      <h3 style="font-size:18px;font-weight:700;color:var(--ink);margin:0 0 6px">No call recordings found</h3>
+      <p class="muted" style="max-width:540px;margin:0 auto;font-size:13.5px;line-height:1.5">
+        When Caller A, Caller B, or Caller C logs a call and attaches their audio recording, it will appear here automatically. You can filter by individual caller and play audio directly.
+      </p>
+    </div>` : `
+    <div style="display:grid;gap:14px">
+      ${rows.map(r => `
+      <div class="card" style="border:1.5px solid var(--line);border-radius:var(--r);padding:18px 20px;background:#fff;box-shadow:0 2px 6px rgba(16,48,95,.03);display:grid;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            ${av(r.caller, 'lg')}
+            <div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <b style="font-size:16px;color:var(--ink)">${esc(r.company)}</b>
+                <span class="faint" style="font-size:13px">(${esc(r.name)})</span>
+              </div>
+              <div class="muted" style="font-size:12.5px;margin-top:2px">
+                📞 <b class="num">${phoneFmt(r.phone)}</b> · ${esc(r.city || 'India')} · Logged ${fmtDT(r.date)} by <b>${CALLERS[r.caller].name}</b>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${pill(r.status)}
+            <a href="${r.url}" download="${esc(r.file || 'recording.mp3')}" class="btn sm soft" style="display:inline-flex;align-items:center;gap:6px">
+              ${ic('download', 14)} Download
+            </a>
+          </div>
+        </div>
+
+        ${r.remark ? `<div style="font-size:13px;background:var(--surface);border-left:3px solid var(--line);padding:8px 12px;border-radius:4px;color:var(--ink-2)">
+          <b>Caller Note:</b> ${esc(r.remark)}
+        </div>` : ''}
+
+        <div style="background:var(--navy-soft);border:1px solid #D5E2F5;border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;min-width:180px">
+            <span style="font-size:18px">🎵</span>
+            <div>
+              <div style="font-weight:600;font-size:12.5px;color:var(--ink);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.file || 'Audio Recording')}</div>
+              <div class="faint" style="font-size:11px">${r.size ? Math.round(r.size/1024) + ' KB' : 'Audio File'}</div>
+            </div>
+          </div>
+          <audio controls src="${r.url}" style="flex:1;min-width:260px;height:36px"></audio>
+        </div>
+      </div>`).join('')}
+    </div>`}
+  </section>
+  `;
+
+  // Attach filter events
+  const bAll = m.querySelector('#rf-all');
+  if(bAll) bAll.onclick = ()=>{ S.recFilter.caller = 'all'; renderTab(); };
+  const bA = m.querySelector('#rf-a');
+  if(bA) bA.onclick = ()=>{ S.recFilter.caller = 'A'; renderTab(); };
+  const bB = m.querySelector('#rf-b');
+  if(bB) bB.onclick = ()=>{ S.recFilter.caller = 'B'; renderTab(); };
+  const bC = m.querySelector('#rf-c');
+  if(bC) bC.onclick = ()=>{ S.recFilter.caller = 'C'; renderTab(); };
+
+  const selStatus = m.querySelector('#rf-status');
+  if(selStatus) selStatus.onchange = e =>{ S.recFilter.status = e.target.value; renderTab(); };
+
+  const inQ = m.querySelector('#rf-q');
+  if(inQ) inQ.oninput = () =>{
+    S.recFilter.q = inQ.value;
+    const pos = inQ.selectionStart;
+    aRecordings(m);
+    const n = m.querySelector('#rf-q');
+    if(n){ n.focus(); n.setSelectionRange(pos, pos); }
+  };
+}
+
 function aReports(m){
   const [from,to,label]=repRange();
   const callers=S.rep.caller==='all'?['A','B','C']:[S.rep.caller];

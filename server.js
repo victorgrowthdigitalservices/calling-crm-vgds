@@ -29,6 +29,7 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+app.use('/uploads', express.static(uploadDir));
 
 // Helper: Authentication Middleware (Simple & rock solid)
 function authMiddleware(req, res, next) {
@@ -56,6 +57,21 @@ function adminOnly(req, res, next) {
   }
   next();
 }
+
+
+// Audio Call Recording Upload
+app.post('/api/recordings/upload', upload.single('recording'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No audio recording file uploaded' });
+  }
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({
+    success: true,
+    url: fileUrl,
+    filename: req.file.originalname,
+    size: req.file.size
+  });
+});
 
 // -------------------------------------------------------------
 // 1. AUTH ROUTES & PORTAL PASSCODES
