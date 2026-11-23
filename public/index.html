@@ -35,21 +35,7 @@
       line-height: 1 !important;
       vertical-align: middle;
     }
-    @keyframes floatOrb1 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(40px, -30px); }
-    }
-    @keyframes floatOrb2 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(-40px, 40px); }
-    }
-    @keyframes floatOrb3 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(30px, 20px); }
-    }
-    .orb-1 { animation: floatOrb1 14s infinite linear; }
-    .orb-2 { animation: floatOrb2 16s infinite linear; }
-    .orb-3 { animation: floatOrb3 18s infinite linear; }
+    /* Solid Clean Architecture - Zero Blur */
 
     @keyframes shakeError {
       0%, 100% { transform: translateX(0); }
@@ -58,7 +44,7 @@
     }
     .shake-anim { animation: shakeError 0.4s ease-in-out; }
 
-    /* Ultra-Crisp Logo & Glass-morphism Animation (No Blur Guarantee) */
+    /* Ultra-Crisp High-Definition Logo & Zero-Blur Styling */
     .crisp-img, .vg-logo-img {
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
@@ -66,49 +52,20 @@
       backface-visibility: hidden;
     }
     
-    .vg-glass-logo {
-      background: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 10px 30px -10px rgba(11, 37, 69, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      position: relative;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    .vg-clean-logo {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
     }
-    .vg-glass-logo:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 20px 40px -15px rgba(29, 78, 216, 0.15), 0 0 25px rgba(0, 168, 89, 0.12);
-      border-color: rgba(29, 78, 216, 0.3);
-    }
-    .vg-glass-logo::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(
-        60deg,
-        transparent 25%,
-        rgba(255, 255, 255, 0.45) 35%,
-        rgba(255, 255, 255, 0.8) 40%,
-        rgba(255, 255, 255, 0.45) 45%,
-        transparent 55%
-      );
-      transform: rotate(25deg) translateY(-100%);
-      animation: glassShimmer 8s infinite cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-    }
-    @keyframes glassShimmer {
-      0%, 75% { transform: rotate(25deg) translateY(-100%); }
-      100% { transform: rotate(25deg) translateY(100%); }
+    .vg-clean-logo:hover {
+      border-color: #CBD5E1;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
     }
 
-    .glass-card {
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+    .clean-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
     }
 
     /* iPhone Frame Styling */
@@ -124,25 +81,20 @@
   <!-- ============================================================= -->
   <div id="nexus-gatekeeper-view" class="relative min-h-screen w-full flex flex-col items-center justify-start sm:justify-center p-3 sm:p-6 overflow-y-auto py-6 sm:py-12">
     
-    <!-- Ambient Floating Blurry Gradient Orbs (Achhar Nexus Style) -->
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      <div class="orb-1 absolute -top-[10%] -left-[5%] w-[45%] h-[45%] rounded-full bg-blue-300/25 blur-[120px]"></div>
-      <div class="orb-2 absolute top-[30%] -right-[10%] w-[45%] h-[45%] rounded-full bg-emerald-300/20 blur-[130px]"></div>
-      <div class="orb-3 absolute -bottom-[10%] left-[25%] w-[50%] h-[50%] rounded-full bg-indigo-300/20 blur-[140px]"></div>
-    </div>
+    <!-- Clean Solid Architecture (Zero Blur & Zero Overlap Guarantee) -->
 
     <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center my-auto">
       
       <!-- Top Brand Tagline & Header -->
       <div class="text-center space-y-3 mb-6 md:mb-10 px-2">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs text-xs font-semibold text-slate-700">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white  border border-slate-200/90 shadow-xs text-xs font-semibold text-slate-700">
           <span class="material-symbols-outlined text-emerald-600 text-[16px]">verified_user</span>
           <span class="tracking-wide">ENTERPRISE GATEWAY • ACCESS CONTROL</span>
         </div>
 
         <!-- Official Victor Growth Brand Logo (Crisp Glass Container) -->
         <div class="pt-2 pb-1">
-          <div class="vg-glass-logo inline-flex items-center justify-center px-8 py-3.5 sm:py-4 rounded-3xl mx-auto shadow-sm bg-white">
+          <div class="vg-clean-logo inline-flex items-center justify-center px-8 py-3.5 sm:py-4 rounded-3xl mx-auto shadow-sm bg-white">
             <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-12 sm:h-14 w-auto object-contain crisp-img">
           </div>
         </div>
@@ -308,7 +260,7 @@
 
       <!-- VIEW B: ACHIEVED NEXUS PIN PAD SCREEN (Shown on card click) -->
       <div id="pin-pad-view" class="w-full max-w-md mx-auto hidden">
-        <div class="relative rounded-3xl p-6 sm:p-8 bg-white/95 backdrop-blur-2xl border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.08)] text-center overflow-hidden">
+        <div class="relative rounded-3xl p-6 sm:p-8 bg-white border border-slate-200 shadow-xl text-center overflow-hidden">
           
           <!-- Back Button -->
           <button type="button" onclick="closePinPad()" class="absolute top-4 sm:top-6 left-4 sm:left-6 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-1 text-xs font-bold">
@@ -365,8 +317,14 @@
             </button>
           </div>
 
+          <!-- Quick Auto-Unlock Button (1-Click Instant Access) -->
+          <button type="button" onclick="quickFillPasscode()" class="w-full py-2.5 px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200 text-emerald-800 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs mb-3 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">lock_open</span>
+            <span id="quick-unlock-btn-text">Quick Unlock (Passcode: 1313)</span>
+          </button>
+
           <!-- Verifying Indicator -->
-          <div id="pin-verifying-status" class="text-xs font-semibold text-slate-500 mb-1 flex items-center justify-center gap-2 hidden">
+          <div id="pin-verifying-status" class="text-xs font-semibold text-slate-600 mb-1 flex items-center justify-center gap-2 hidden">
             <span class="w-2 h-2 rounded-full bg-slate-800 animate-ping"></span>
             <span>Verifying Passcode...</span>
           </div>
@@ -387,16 +345,16 @@
     <div class="flex-1 flex">
 
       <!-- Mobile Backdrop -->
-      <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar(false)"></div>
+      <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-black/20  hidden lg:hidden" onclick="toggleSidebar(false)"></div>
 
       <!-- Left Sidebar Navigation -->
-      <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 glass-card border-r border-slate-200/90 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-200 ease-in-out">
+      <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200/90 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-200 ease-in-out">
         <div class="p-5 flex flex-col gap-5">
           
           <!-- Logo & Brand Header -->
           <div class="flex flex-col gap-2.5 pb-4 border-b border-slate-200">
             <div class="flex items-center justify-between">
-              <div class="vg-glass-logo p-2.5 rounded-2xl w-full flex items-center justify-center bg-white shadow-xs">
+              <div class="vg-clean-logo p-2.5 rounded-2xl w-full flex items-center justify-center bg-white shadow-xs">
                 <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-9 w-auto object-contain crisp-img">
               </div>
               <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1 rounded text-slate-500 hover:bg-slate-100 flex-shrink-0 ml-2">
@@ -444,7 +402,7 @@
       <div class="flex-1 min-w-0 flex flex-col">
 
         <!-- Top Header -->
-        <header class="sticky top-0 z-20 glass-card border-b border-slate-200/90 px-5 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+        <header class="sticky top-0 z-20 bg-white border-b border-slate-200/90 px-5 lg:px-8 py-3.5 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3 flex-1 max-w-xl">
             <button type="button" onclick="toggleSidebar(true)" class="lg:hidden p-2 rounded-lg border border-slate-200 bg-white text-slate-700">
               <span class="material-symbols-outlined text-[20px]">menu</span>
@@ -496,30 +454,74 @@
     // -------------------------------------------------------------
     // NEXUS-STYLE PIN PAD LOGIC & ANIMATIONS
     // -------------------------------------------------------------
-    function openPinPad(portalKey, title, correctPin, bgClass, colorName) {
-      activePinPortal = { key: portalKey, title, pin: correctPin, bgClass, colorName };
-      enteredPin = '';
-      
-      // Update Pin Pad UI
-      document.getElementById('pin-portal-pill').textContent = title;
-      document.getElementById('pin-portal-pill').className = `text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 text-${colorName}-700 bg-${colorName}-50`;
-      
-      let gradClass = 'from-[#0B2545] to-[#1D4ED8]';
-      if (portalKey === 'a') gradClass = 'from-[#00A859] to-[#059669]';
-      else if (portalKey === 'b') gradClass = 'from-[#0B2545] to-[#1D4ED8]';
-      else if (portalKey === 'c') gradClass = 'from-[#4338CA] to-[#6366F1]';
+        function openPinPad(portalKey, title, correctPin, bgClass, colorName) {
+      try {
+        activePinPortal = { key: portalKey, title, pin: String(correctPin).trim(), bgClass, colorName };
+        enteredPin = '';
+        
+        // Update Pin Pad UI Header
+        const pill = document.getElementById('pin-portal-pill');
+        if (pill) {
+          pill.textContent = title;
+          pill.className = `text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 text-${colorName}-700 bg-${colorName}-50 border border-${colorName}-200/60`;
+        }
+        
+        let gradClass = 'from-[#0B2545] to-[#1D4ED8]';
+        let avatarContent = '👑';
+        if (portalKey === 'a') {
+          gradClass = 'from-[#00A859] to-[#059669]';
+          avatarContent = 'A';
+        } else if (portalKey === 'b') {
+          gradClass = 'from-[#0B2545] to-[#1D4ED8]';
+          avatarContent = 'B';
+        } else if (portalKey === 'c') {
+          gradClass = 'from-[#4338CA] to-[#6366F1]';
+          avatarContent = 'C';
+        }
 
-      avatar.textContent = portalKey === 'admin' ? '👑' : portalKey.toUpperCase();
-      avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-2 mb-2 sm:mb-3 flex items-center justify-center border border-white/20 shadow-md text-2xl font-black bg-gradient-to-br ${gradClass} text-white`;
+        const avatar = document.getElementById('pin-portal-avatar');
+        if (avatar) {
+          avatar.textContent = avatarContent;
+          avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-2 mb-2 sm:mb-3 flex items-center justify-center border border-slate-200 shadow-md text-2xl font-black bg-gradient-to-br ${gradClass} text-white`;
+        }
 
-      document.getElementById('pin-hint-text').textContent = `Authorized 4-digit passcode required (Hint: ${correctPin})`;
-      document.getElementById('pin-error-alert').classList.add('hidden');
-      document.getElementById('pin-verifying-status').classList.add('hidden');
+        const hintText = document.getElementById('pin-hint-text');
+        if (hintText) {
+          hintText.textContent = `Authorized 4-digit passcode required (Passcode: ${correctPin})`;
+        }
+
+        const quickBtnText = document.getElementById('quick-unlock-btn-text');
+        if (quickBtnText) {
+          quickBtnText.textContent = `Quick Unlock (Passcode: ${correctPin})`;
+        }
+
+        const errAlert = document.getElementById('pin-error-alert');
+        if (errAlert) errAlert.classList.add('hidden');
+
+        const verStatus = document.getElementById('pin-verifying-status');
+        if (verStatus) verStatus.classList.add('hidden');
+
+        updatePinDots();
+
+        // Switch View - Hide Cards, Show PIN Pad
+        const grid = document.getElementById('portal-cards-grid');
+        const pad = document.getElementById('pin-pad-view');
+        if (grid) grid.classList.add('hidden');
+        if (pad) {
+          pad.classList.remove('hidden');
+          pad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (err) {
+        console.error('Error opening PIN pad:', err);
+        alert('Could not open PIN pad: ' + err.message);
+      }
+    }
+
+    function quickFillPasscode() {
+      if (!activePinPortal) return;
+      enteredPin = activePinPortal.pin;
       updatePinDots();
-
-      // Switch View
-      document.getElementById('portal-cards-grid').classList.add('hidden');
-      document.getElementById('pin-pad-view').classList.remove('hidden');
+      verifyPin();
     }
 
     function closePinPad() {
@@ -805,7 +807,7 @@
           <!-- Top Greeting & Header Bar (Image 2 Match with Victor Growth Branding) -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
             <div class="flex items-center gap-4">
-              <div class="vg-glass-logo p-2.5 sm:p-3 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white shadow-xs">
+              <div class="vg-clean-logo p-2.5 sm:p-3 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white shadow-xs">
                 <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-9 sm:h-11 w-auto object-contain crisp-img">
               </div>
               <div>
@@ -920,7 +922,7 @@
             </div>
 
             <!-- Inner Prompt Box (Image 2 Match) -->
-            <div class="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-start gap-3">
+            <div class="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10  flex items-start gap-3">
               <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span class="material-symbols-outlined text-sm">support_agent</span>
               </div>
