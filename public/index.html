@@ -58,14 +58,62 @@
     }
     .shake-anim { animation: shakeError 0.4s ease-in-out; }
 
-    .vg-logo-img {
+    /* Ultra-Crisp Logo & Glass-morphism Animation (No Blur Guarantee) */
+    .crisp-img, .vg-logo-img {
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
+    
+    .vg-glass-logo {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 10px 30px -10px rgba(11, 37, 69, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .vg-glass-logo:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -15px rgba(29, 78, 216, 0.15), 0 0 25px rgba(0, 168, 89, 0.12);
+      border-color: rgba(29, 78, 216, 0.3);
+    }
+    .vg-glass-logo::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        60deg,
+        transparent 25%,
+        rgba(255, 255, 255, 0.45) 35%,
+        rgba(255, 255, 255, 0.8) 40%,
+        rgba(255, 255, 255, 0.45) 45%,
+        transparent 55%
+      );
+      transform: rotate(25deg) translateY(-100%);
+      animation: glassShimmer 8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    @keyframes glassShimmer {
+      0%, 75% { transform: rotate(25deg) translateY(-100%); }
+      100% { transform: rotate(25deg) translateY(100%); }
+    }
+
     .glass-card {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* iPhone Frame Styling */
+    .iphone-frame {
+      box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     }
   </style>
 </head>
@@ -87,134 +135,175 @@
       
       <!-- Top Brand Tagline & Header -->
       <div class="text-center space-y-3 mb-6 md:mb-10 px-2">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-xs font-bold text-slate-700">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="tracking-wide">VICTOR GROWTH • ENTERPRISE GATEWAY • ACCESS CONTROL</span>
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs text-xs font-semibold text-slate-700">
+          <span class="material-symbols-outlined text-emerald-600 text-[16px]">verified_user</span>
+          <span class="tracking-wide">ENTERPRISE GATEWAY • ACCESS CONTROL</span>
         </div>
 
-        <div class="pt-1 pb-1">
-          <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-14 sm:h-16 w-auto mx-auto object-contain vg-logo-img drop-shadow-sm">
+        <!-- Official Victor Growth Brand Logo (Crisp Glass Container) -->
+        <div class="pt-2 pb-1">
+          <div class="vg-glass-logo inline-flex items-center justify-center px-8 py-3.5 sm:py-4 rounded-3xl mx-auto shadow-sm bg-white">
+            <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-12 sm:h-14 w-auto object-contain crisp-img">
+          </div>
         </div>
 
-        <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-          Select Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600">Workspace Portal</span>
+        <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
+          Select Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-[#00A859]">Workspace Portal</span>
         </h1>
         <p class="text-xs sm:text-sm md:text-base text-slate-500 max-w-xl mx-auto font-medium">
-          Authorized personnel only. Choose your designated calling workspace and enter your 4-digit passcode to proceed.
+          Authorized personnel only. Choose your designated workspace and enter your 4-digit passcode to proceed.
         </p>
       </div>
 
-      <!-- VIEW A: 4 PORTAL CARDS (Shown when not entering PIN) -->
+      <!-- VIEW A: 4 PORTAL CARDS (Achhar Nexus Style with Victor Growth Branding) -->
       <div id="portal-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 w-full max-w-5xl px-1">
         
         <!-- CARD 1: ADMIN PORTAL -->
-        <div onclick="openPinPad('admin', 'Admin Portal', '1313', 'bg-blue-600', 'blue')" 
-             class="group relative cursor-pointer rounded-3xl p-6 bg-white/95 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400 shadow-[0_8px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_40px_rgba(37,99,235,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
-          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 opacity-90 group-hover:h-2 transition-all"></div>
+        <div onclick="openPinPad('admin', 'Admin Portal', '1313', 'bg-[#0B2545]', 'blue')" 
+             class="group relative cursor-pointer rounded-3xl p-6 sm:p-7 bg-white border border-slate-200/90 hover:border-blue-400 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(29,78,216,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-sky-400 opacity-90 group-hover:h-2 transition-all"></div>
           <div>
             <div class="flex items-center justify-between mb-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100/70 border border-blue-200/60 flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0B2545] to-[#1D4ED8] text-white flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform">
                 👑
               </div>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200/60">
-                Master Authority
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200/80">
+                ✦ Master Suite
               </span>
             </div>
-            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">Admin Portal</h3>
-            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
-              Sheet upload, lead distribution across A, B & C, real-time live telemetry, hot leads & reports.
+            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">Victor Growth Admin</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
+              Central sheet upload, auto-allocation across A, B & C, real-time live telemetry, hot leads & reports.
             </p>
+            <div class="flex items-center gap-1.5 flex-wrap my-4">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">Central Leads</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">Auto-Allocate</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">Live Telemetry</span>
+            </div>
           </div>
-          <div class="mt-6 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
-            <span class="font-mono text-[11px] text-slate-400">PIN: 1313</span>
+          <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+            <span class="flex items-center gap-1 text-slate-400 font-mono text-[11px] font-medium">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              <span>Passcode Protected</span>
+            </span>
             <span class="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-              <span>Launch</span>
+              <span>Unlock Portal</span>
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           </div>
         </div>
 
         <!-- CARD 2: CALLER A PORTAL -->
-        <div onclick="openPinPad('a', 'A Portal', '0000', 'bg-emerald-600', 'emerald')" 
-             class="group relative cursor-pointer rounded-3xl p-6 bg-white/95 backdrop-blur-xl border border-slate-200/80 hover:border-emerald-400 shadow-[0_8px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_40px_rgba(16,185,129,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
-          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 opacity-90 group-hover:h-2 transition-all"></div>
+        <div onclick="openPinPad('a', 'A Portal', '0000', 'bg-[#00A859]', 'emerald')" 
+             class="group relative cursor-pointer rounded-3xl p-6 sm:p-7 bg-white border border-slate-200/90 hover:border-emerald-400 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(0,168,89,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#00A859] via-emerald-500 to-teal-400 opacity-90 group-hover:h-2 transition-all"></div>
           <div>
             <div class="flex items-center justify-between mb-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100/70 border border-emerald-200/60 flex items-center justify-center text-xl font-black text-emerald-700 shadow-sm group-hover:scale-105 transition-transform">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00A859] to-[#059669] text-white flex items-center justify-center text-2xl font-black shadow-sm group-hover:scale-105 transition-transform">
                 A
               </div>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200/60">
-                Calling Desk
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200/80">
+                🕒 Live Shift
               </span>
             </div>
-            <h3 class="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">A Portal</h3>
-            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
-              Dedicated queue for Person A. Line-by-line dialer, calling pitch cards & 1-day follow-up countdowns.
+            <h3 class="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">Caller A Workspace</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
+              Dedicated calling queue for Person A. Line-by-line dialer, verified interior contacts & 24h timer alerts.
             </p>
+            <div class="flex items-center gap-1.5 flex-wrap my-4">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-[10px] font-bold text-emerald-800 border border-emerald-200/60">1-Click Dial</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">WhatsApp Sync</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">24h Follow-up</span>
+            </div>
           </div>
-          <div class="mt-6 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
-            <span class="font-mono text-[11px] text-slate-400">PIN: 0000</span>
+          <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+            <span class="flex items-center gap-1 text-slate-400 font-mono text-[11px] font-medium">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              <span>Passcode Protected</span>
+            </span>
             <span class="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-              <span>Launch</span>
+              <span>Unlock Desk</span>
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           </div>
         </div>
 
         <!-- CARD 3: CALLER B PORTAL -->
-        <div onclick="openPinPad('b', 'B Portal', '0000', 'bg-blue-600', 'blue')" 
-             class="group relative cursor-pointer rounded-3xl p-6 bg-white/95 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400 shadow-[0_8px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_40px_rgba(37,99,235,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
-          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400 opacity-90 group-hover:h-2 transition-all"></div>
+        <div onclick="openPinPad('b', 'B Portal', '0000', 'bg-[#1D4ED8]', 'blue')" 
+             class="group relative cursor-pointer rounded-3xl p-6 sm:p-7 bg-white border border-slate-200/90 hover:border-blue-400 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(29,78,216,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-sky-400 opacity-90 group-hover:h-2 transition-all"></div>
           <div>
             <div class="flex items-center justify-between mb-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100/70 border border-blue-200/60 flex items-center justify-center text-xl font-black text-blue-700 shadow-sm group-hover:scale-105 transition-transform">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0B2545] to-[#1D4ED8] text-white flex items-center justify-center text-2xl font-black shadow-sm group-hover:scale-105 transition-transform">
                 B
               </div>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-blue-800 bg-blue-50 border border-blue-200/60">
-                Calling Desk
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-blue-800 bg-blue-50 border border-blue-200/80">
+                🕒 Live Shift
               </span>
             </div>
-            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors">B Portal</h3>
-            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
-              Dedicated queue for Person B. Isolated database views, 1-click dial & WhatsApp, auto timer alerts.
+            <h3 class="text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors">Caller B Workspace</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
+              Dedicated queue for Person B. Isolated database views, high-conversion pitch script & auto timer alerts.
             </p>
+            <div class="flex items-center gap-1.5 flex-wrap my-4">
+              <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-[10px] font-bold text-blue-800 border border-blue-200/60">1-Click Dial</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">WhatsApp Sync</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">24h Follow-up</span>
+            </div>
           </div>
-          <div class="mt-6 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-700">
-            <span class="font-mono text-[11px] text-slate-400">PIN: 0000</span>
+          <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-700">
+            <span class="flex items-center gap-1 text-slate-400 font-mono text-[11px] font-medium">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              <span>Passcode Protected</span>
+            </span>
             <span class="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-              <span>Launch</span>
+              <span>Unlock Desk</span>
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           </div>
         </div>
 
         <!-- CARD 4: CALLER C PORTAL -->
-        <div onclick="openPinPad('c', 'C Portal', '0000', 'bg-purple-600', 'purple')" 
-             class="group relative cursor-pointer rounded-3xl p-6 bg-white/95 backdrop-blur-xl border border-slate-200/80 hover:border-purple-400 shadow-[0_8px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_18px_40px_rgba(168,85,247,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
-          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-400 opacity-90 group-hover:h-2 transition-all"></div>
+        <div onclick="openPinPad('c', 'C Portal', '0000', 'bg-[#4338CA]', 'indigo')" 
+             class="group relative cursor-pointer rounded-3xl p-6 sm:p-7 bg-white border border-slate-200/90 hover:border-indigo-400 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(67,56,202,0.12)] transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4338CA] via-indigo-500 to-sky-400 opacity-90 group-hover:h-2 transition-all"></div>
           <div>
             <div class="flex items-center justify-between mb-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-50 to-fuchsia-100/70 border border-purple-200/60 flex items-center justify-center text-xl font-black text-purple-700 shadow-sm group-hover:scale-105 transition-transform">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4338CA] to-[#6366F1] text-white flex items-center justify-center text-2xl font-black shadow-sm group-hover:scale-105 transition-transform">
                 C
               </div>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-purple-800 bg-purple-50 border border-purple-200/60">
-                Calling Desk
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-indigo-800 bg-indigo-50 border border-indigo-200/80">
+                🕒 Live Shift
               </span>
             </div>
-            <h3 class="text-xl font-black text-slate-900 group-hover:text-purple-700 transition-colors">C Portal</h3>
-            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
+            <h3 class="text-xl font-black text-slate-900 group-hover:text-indigo-700 transition-colors">Caller C Workspace</h3>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
               Dedicated queue for Person C. Completely separated data partition, pitch script & call remarks.
             </p>
+            <div class="flex items-center gap-1.5 flex-wrap my-4">
+              <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-[10px] font-bold text-indigo-800 border border-indigo-200/60">1-Click Dial</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">WhatsApp Sync</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">24h Follow-up</span>
+            </div>
           </div>
-          <div class="mt-6 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-purple-700">
-            <span class="font-mono text-[11px] text-slate-400">PIN: 0000</span>
+          <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-700">
+            <span class="flex items-center gap-1 text-slate-400 font-mono text-[11px] font-medium">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              <span>Passcode Protected</span>
+            </span>
             <span class="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-              <span>Launch</span>
+              <span>Unlock Desk</span>
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </span>
           </div>
         </div>
 
+      </div>
+
+      <!-- Bottom Session Security Footer (Image 1 Style) -->
+      <div class="mt-8 sm:mt-10 text-center text-xs font-semibold text-slate-400 flex items-center justify-center gap-1.5">
+        <span class="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
+        <span>End-to-End Encrypted Session • Victor Growth Multi-Agent Operations</span>
       </div>
 
       <!-- VIEW B: ACHIEVED NEXUS PIN PAD SCREEN (Shown on card click) -->
@@ -305,17 +394,19 @@
         <div class="p-5 flex flex-col gap-5">
           
           <!-- Logo & Brand Header -->
-          <div class="flex items-center justify-between pb-3.5 border-b border-slate-200">
-            <div class="flex flex-col gap-1 w-full pr-1">
-              <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-10 w-auto object-contain object-left vg-logo-img">
-              <div class="flex items-center justify-between mt-0.5">
-                <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-700 font-bold" id="sidebar-role-indicator">Enterprise Desk</span>
-                <span class="text-[9px] text-slate-400 font-medium">Win The Digital Game</span>
+          <div class="flex flex-col gap-2.5 pb-4 border-b border-slate-200">
+            <div class="flex items-center justify-between">
+              <div class="vg-glass-logo p-2.5 rounded-2xl w-full flex items-center justify-center bg-white shadow-xs">
+                <img src="logo.jpg" alt="Victor Growth Digital Services" class="h-9 w-auto object-contain crisp-img">
               </div>
+              <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1 rounded text-slate-500 hover:bg-slate-100 flex-shrink-0 ml-2">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
             </div>
-            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1 rounded text-slate-500 hover:bg-slate-100 flex-shrink-0">
-              <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
+            <div class="flex items-center justify-between px-1">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-700 font-bold" id="sidebar-role-indicator">Enterprise Desk</span>
+              <span class="text-[9px] text-slate-500 font-semibold">Win The Digital Game</span>
+            </div>
           </div>
 
           <!-- Nav Items Container -->
@@ -324,23 +415,26 @@
           </nav>
         </div>
 
-        <!-- Sidebar Profile Footer -->
-        <div class="p-4 border-t border-slate-200/90 bg-white/70">
-          <div class="flex items-center justify-between mb-2">
+        <!-- Sidebar Profile Footer (Image 2 Match) -->
+        <div class="p-4 border-t border-slate-200/90 bg-white flex flex-col gap-2.5">
+          <button onclick="logoutToPortalSelect()" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition">
+            <span class="material-symbols-outlined text-[16px] text-slate-500">lock</span>
+            <span>Switch Portal / Lock</span>
+          </button>
+          
+          <div class="flex items-center justify-between px-1 text-[11px] font-semibold text-slate-500">
             <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500" id="current-portal-badge">Admin Portal</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="current-portal-badge">Admin Portal</span>
             </div>
-            <button onclick="logoutToPortalSelect()" class="text-[11px] font-bold text-rose-600 hover:underline flex items-center gap-0.5">
-              <span class="material-symbols-outlined text-[14px]">logout</span>
-              <span>Switch Portal</span>
-            </button>
+            <span class="font-mono text-slate-400 text-[10px]">VG-1005</span>
           </div>
-          <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200">
-            <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-sm shadow-sm" id="user-avatar-initials">👑</div>
+
+          <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+            <div class="w-8 h-8 rounded-xl bg-[#0B2545] text-white font-bold flex items-center justify-center text-xs shadow-xs" id="user-avatar-initials">👑</div>
             <div class="flex flex-col overflow-hidden">
               <span class="text-xs font-bold text-slate-900 truncate" id="user-display-name">Victor Growth Admin</span>
-              <span class="text-[10px] text-slate-500 truncate" id="user-sub-label">Full Master Access</span>
+              <span class="text-[10px] text-slate-400 truncate" id="user-sub-label">Full Master Access</span>
             </div>
           </div>
         </div>
@@ -410,11 +504,15 @@
       document.getElementById('pin-portal-pill').textContent = title;
       document.getElementById('pin-portal-pill').className = `text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 text-${colorName}-700 bg-${colorName}-50`;
       
-      const avatar = document.getElementById('pin-portal-avatar');
-      avatar.textContent = portalKey === 'admin' ? '👑' : portalKey.toUpperCase();
-      avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-2 mb-2 sm:mb-3 flex items-center justify-center border shadow-sm text-2xl font-black bg-${colorName}-50 border-${colorName}-200 text-${colorName}-700`;
+      let gradClass = 'from-[#0B2545] to-[#1D4ED8]';
+      if (portalKey === 'a') gradClass = 'from-[#00A859] to-[#059669]';
+      else if (portalKey === 'b') gradClass = 'from-[#0B2545] to-[#1D4ED8]';
+      else if (portalKey === 'c') gradClass = 'from-[#4338CA] to-[#6366F1]';
 
-      document.getElementById('pin-hint-text').textContent = `Passcode enter karein (Hint: ${correctPin})`;
+      avatar.textContent = portalKey === 'admin' ? '👑' : portalKey.toUpperCase();
+      avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-2 mb-2 sm:mb-3 flex items-center justify-center border border-white/20 shadow-md text-2xl font-black bg-gradient-to-br ${gradClass} text-white`;
+
+      document.getElementById('pin-hint-text').textContent = `Authorized 4-digit passcode required (Hint: ${correctPin})`;
       document.getElementById('pin-error-alert').classList.add('hidden');
       document.getElementById('pin-verifying-status').classList.add('hidden');
       updatePinDots();
@@ -578,8 +676,15 @@
       }
     }
 
+    function getGreeting() {
+      const h = new Date().getHours();
+      if (h < 12) return 'Good Morning';
+      if (h < 17) return 'Good Afternoon';
+      return 'Good Evening';
+    }
+
     // -------------------------------------------------------------
-    // NAVIGATION MENU
+    // NAVIGATION MENU (Achhar Nexus Categorized Style)
     // -------------------------------------------------------------
     function renderNav() {
       const nav = document.getElementById('nav-container');
@@ -587,61 +692,73 @@
 
       if (currentUser.role === 'admin') {
         nav.innerHTML = `
-          <button onclick="navigateTo('admin-dashboard')" class="nav-item ${currentTab === 'admin-dashboard' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+          <div class="px-2 pt-1 pb-1">
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">TELECALLING OPERATIONS</span>
+          </div>
+
+          <button onclick="navigateTo('admin-dashboard')" class="nav-item ${currentTab === 'admin-dashboard' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px]">dashboard</span>
             <span>Admin Overview</span>
           </button>
 
-          <button onclick="navigateTo('admin-interested')" class="nav-item ${currentTab === 'admin-interested' ? 'active' : ''} flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
+          <button onclick="navigateTo('admin-interested')" class="nav-item ${currentTab === 'admin-interested' ? 'active' : ''} flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
             <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-[20px] text-amber-500">local_fire_department</span>
+              <span class="material-symbols-outlined text-[19px] text-amber-500">local_fire_department</span>
               <span>Interested Leads</span>
             </div>
             <span id="nav-interested-badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-900">0</span>
           </button>
 
-          <button onclick="navigateTo('admin-upload')" class="nav-item ${currentTab === 'admin-upload' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px] text-blue-600">upload_file</span>
+          <button onclick="navigateTo('admin-upload')" class="nav-item ${currentTab === 'admin-upload' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px] text-blue-600">upload_file</span>
             <span>Upload & Allocate</span>
           </button>
 
-          <button onclick="navigateTo('admin-reports')" class="nav-item ${currentTab === 'admin-reports' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px]">analytics</span>
+          <div class="px-2 pt-4 pb-1">
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">PERFORMANCE & VAULT</span>
+          </div>
+
+          <button onclick="navigateTo('admin-reports')" class="nav-item ${currentTab === 'admin-reports' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px]">analytics</span>
             <span>Performance Reports</span>
           </button>
 
-          <button onclick="navigateTo('admin-all-leads')" class="nav-item ${currentTab === 'admin-all-leads' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px]">dataset</span>
+          <button onclick="navigateTo('admin-all-leads')" class="nav-item ${currentTab === 'admin-all-leads' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px]">dataset</span>
             <span>Central Lead Bank</span>
           </button>
         `;
       } else {
         nav.innerHTML = `
-          <button onclick="navigateTo('caller-calling')" class="nav-item ${currentTab === 'caller-calling' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px] text-emerald-600">call</span>
-            <span>Line-by-Line Calling</span>
+          <div class="px-2 pt-1 pb-1">
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">CALLING DESK</span>
+          </div>
+
+          <button onclick="navigateTo('caller-calling')" class="nav-item ${currentTab === 'caller-calling' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px] text-emerald-600">call</span>
+            <span>Active Lead Queue</span>
           </button>
 
-          <button onclick="navigateTo('caller-followups')" class="nav-item ${currentTab === 'caller-followups' ? 'active' : ''} flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
+          <button onclick="navigateTo('caller-followups')" class="nav-item ${currentTab === 'caller-followups' ? 'active' : ''} flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
             <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-[20px] text-amber-500">alarm</span>
-              <span>My Follow-ups (1-Day)</span>
+              <span class="material-symbols-outlined text-[19px] text-amber-500">alarm</span>
+              <span>Follow-ups (1-Day)</span>
             </div>
             <span id="nav-caller-followups-badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-900">0</span>
           </button>
 
-          <button onclick="navigateTo('caller-history')" class="nav-item ${currentTab === 'caller-history' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-left transition">
-            <span class="material-symbols-outlined text-[20px]">history</span>
-            <span>My Completed Calls</span>
+          <button onclick="navigateTo('caller-history')" class="nav-item ${currentTab === 'caller-history' ? 'active' : ''} flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-left transition">
+            <span class="material-symbols-outlined text-[19px]">history</span>
+            <span>Completed Calls</span>
           </button>
         `;
       }
 
       document.querySelectorAll('.nav-item').forEach(el => {
         if (el.classList.contains('active')) {
-          el.className = 'nav-item active flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold text-sm bg-slate-900 text-white shadow-sm';
+          el.className = 'nav-item active flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-white border border-slate-200 text-slate-900 shadow-sm';
         } else {
-          el.className = 'nav-item flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition';
+          el.className = 'nav-item flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition';
         }
       });
     }
@@ -682,164 +799,324 @@
         const intBadge = document.getElementById('nav-interested-badge');
         if (intBadge) intBadge.textContent = totals.total_interested || 0;
 
+        const currentTimeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         container.innerHTML = `
-          <!-- Page Header -->
-          <div class="flex flex-wrap items-end justify-between gap-4">
+          <!-- Top Greeting & Header Bar (Image 2 Match) -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
             <div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full">Victor Growth Digital Services</span>
+              <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-baseline gap-2 flex-wrap">
+                <span>${getGreeting()},</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0B2545] via-[#1D4ED8] to-[#00A859]">Victor Growth Admin</span>
+              </h1>
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                <span class="text-blue-600 font-bold">✦</span>
+                <span>Your Telecalling CRM & Live Telemetry is standing by.</span>
               </div>
-              <h1 class="text-3xl font-black text-slate-900 mt-1 tracking-tight">Admin Command Center</h1>
-              <p class="text-xs sm:text-sm text-slate-500 font-medium">Live monitoring of Person A, Person B, and Person C with instant telemetry.</p>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="renderAdminDashboard()" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-sm transition">
-                <span class="material-symbols-outlined text-[16px]">refresh</span>
-                <span>Refresh Live</span>
+
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-xs font-bold text-indigo-800 shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+                <span>Live Telemetry</span>
+              </div>
+
+              <button onclick="logoutToPortalSelect()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition">
+                <span class="material-symbols-outlined text-[16px]">lock</span>
+                <span>Switch Portal</span>
+              </button>
+
+              <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-xs font-bold text-emerald-800 shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>System Online</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 4 Metric Cards (Image 2 Exact Clean Match) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <!-- Metric 1: CALLERS -->
+            <div class="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between gap-4">
+              <div class="flex items-center justify-between text-slate-400">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">CALLERS</span>
+                <div class="w-9 h-9 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <span class="material-symbols-outlined text-[18px]">graphic_eq</span>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-3 pt-1">
+                <span class="text-4xl sm:text-5xl font-black text-slate-900 font-mono tracking-tight">${callers.length || 3}</span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Online</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Metric 2: CALLS TODAY -->
+            <div class="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between gap-4">
+              <div class="flex items-center justify-between text-slate-400">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">CALLS TODAY</span>
+                <div class="w-9 h-9 rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center justify-center text-blue-600">
+                  <span class="material-symbols-outlined text-[18px]">call</span>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-3 pt-1">
+                <span class="text-4xl sm:text-5xl font-black text-slate-900 font-mono tracking-tight">${totals.total_calls || 0}</span>
+                <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Logged</span>
+              </div>
+            </div>
+
+            <!-- Metric 3: HOT LEADS -->
+            <div class="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between gap-4">
+              <div class="flex items-center justify-between text-slate-400">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">HOT LEADS</span>
+                <div class="w-9 h-9 rounded-2xl bg-amber-50/80 border border-amber-100 flex items-center justify-center text-amber-600">
+                  <span class="material-symbols-outlined text-[18px]">local_fire_department</span>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-3 pt-1">
+                <span class="text-4xl sm:text-5xl font-black text-slate-900 font-mono tracking-tight">${totals.total_interested || 0}</span>
+                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Ready</span>
+              </div>
+            </div>
+
+            <!-- Metric 4: EFFICIENCY STATUS -->
+            <div class="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between gap-4">
+              <div class="flex items-center justify-between text-slate-400">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">STATUS</span>
+                <div class="w-9 h-9 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                  <span class="material-symbols-outlined text-[18px]">verified</span>
+                </div>
+              </div>
+              <div class="flex items-baseline gap-3 pt-1">
+                <span class="text-4xl sm:text-5xl font-black text-slate-900 font-mono tracking-tight">100%</span>
+                <span class="text-xs font-bold text-slate-500">Sync Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manager Command Center Dark Hero Card (Image 2 Match) -->
+          <div class="rounded-3xl bg-gradient-to-r from-[#0B2545] via-[#0E2D56] to-[#071A2E] p-6 sm:p-7 text-white shadow-xl border border-slate-800 relative overflow-hidden">
+            <div class="flex items-center justify-between pb-4 border-b border-white/10">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
+                  <span class="material-symbols-outlined text-xl">smart_toy</span>
+                </div>
+                <div>
+                  <h2 class="text-base sm:text-lg font-black tracking-tight text-white">Manager Command Center</h2>
+                  <p class="text-xs text-slate-300 font-medium">Assigns tasks to Callers A, B, and C with automated duplicate filtering.</p>
+                </div>
+              </div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="tracking-wider">LISTENING</span>
+              </div>
+            </div>
+
+            <!-- Inner Prompt Box (Image 2 Match) -->
+            <div class="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-start gap-3">
+              <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-sm">support_agent</span>
+              </div>
+              <div class="flex-1">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 mb-0.5">MANAGER</div>
+                <p class="text-xs text-slate-200 leading-relaxed font-medium">
+                  I am ready for your commands! Upload your central client sheet in Excel or CSV format — our duplicate detection protocol will automatically clean 10-digit mobile numbers and allocate batches evenly.
+                </p>
+              </div>
+            </div>
+
+            <!-- Quick Action Launcher Pills -->
+            <div class="mt-4 flex items-center gap-3 flex-wrap">
+              <button onclick="navigateTo('admin-upload')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 transition shadow-md">
+                <span class="material-symbols-outlined text-[16px]">cloud_upload</span>
+                <span>Upload Central Sheet</span>
+              </button>
+
+              <button onclick="navigateTo('admin-interested')" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 transition border border-white/10">
+                <span class="material-symbols-outlined text-[16px] text-amber-400">local_fire_department</span>
+                <span>Hot Leads (${totals.total_interested || 0})</span>
+              </button>
+
+              <button onclick="downloadPerformanceReport()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 transition border border-white/10">
+                <span class="material-symbols-outlined text-[16px] text-emerald-400">download</span>
+                <span>Download Excel Report</span>
               </button>
             </div>
           </div>
 
-          <!-- Top 4 Telemetry Metrics -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div class="flex items-center justify-between text-slate-500 mb-2">
-                <span class="text-xs font-bold uppercase tracking-wider">Calls Made Today</span>
-                <span class="material-symbols-outlined text-blue-600">call</span>
+          <!-- Section: Calling Persons Live - Small iPhone / Mobile Mockup Structures (Caller A, Caller B, Caller C) -->
+          <div class="flex flex-col gap-5 pt-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <span class="p-1.5 rounded-xl bg-blue-100 text-blue-700 material-symbols-outlined text-base">phone_iphone</span>
+                  <span>Calling Persons Live Telemetry (Mobile Desk A, B, C)</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Live smartphone status, individual dialing progress, and today's activity.</p>
               </div>
-              <div class="flex items-baseline justify-between">
-                <span class="text-3xl font-black text-slate-900 font-mono">${totals.total_calls || 0}</span>
-                <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Team Aggregate</span>
-              </div>
+              <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                <span>3 Mobile Terminals</span>
+              </span>
             </div>
-
-            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div class="flex items-center justify-between text-slate-500 mb-2">
-                <span class="text-xs font-bold uppercase tracking-wider">Interested Clients</span>
-                <span class="material-symbols-outlined text-emerald-600">local_fire_department</span>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span class="text-3xl font-black text-slate-900 font-mono">${totals.total_interested || 0}</span>
-                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Hot Pipeline</span>
-              </div>
-            </div>
-
-            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div class="flex items-center justify-between text-slate-500 mb-2">
-                <span class="text-xs font-bold uppercase tracking-wider">Pending Callbacks</span>
-                <span class="material-symbols-outlined text-amber-600">alarm</span>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span class="text-3xl font-black text-slate-900 font-mono">${totals.total_callbacks || 0}</span>
-                <span class="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">1-Day Timer</span>
-              </div>
-            </div>
-
-            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div class="flex items-center justify-between text-slate-500 mb-2">
-                <span class="text-xs font-bold uppercase tracking-wider">Data Yet To Call</span>
-                <span class="material-symbols-outlined text-slate-500">pending_actions</span>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span class="text-3xl font-black text-slate-900 font-mono">${totals.total_remaining || 0}</span>
-                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">Uncalled Leads</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Calling Persons Live Cards (A, B, C) -->
-          <div class="flex flex-col gap-3">
-            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-600">groups</span>
-              <span>Calling Persons Live Telemetry (Person A, Person B, Person C)</span>
-            </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              ${callers.map(c => `
-                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between gap-4">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-black flex items-center justify-center text-sm shadow-sm">
-                        ${c.name.replace('Caller ', '')}
-                      </div>
+            <!-- 3 Columns for Mobile Phones: Spacious, Responsive & Perfectly Centered -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 justify-items-center items-stretch w-full">
+              ${callers.map(c => {
+                const callerLetter = c.name.replace('Caller ', '').trim();
+                let avatarGrad = 'from-blue-600 via-indigo-600 to-sky-500';
+                let progBarColor = 'bg-blue-600';
+                let phoneBorderGlow = 'hover:border-blue-500/70';
+
+                if (callerLetter === 'A') {
+                  avatarGrad = 'from-emerald-500 via-teal-600 to-cyan-500';
+                  progBarColor = 'bg-emerald-500';
+                  phoneBorderGlow = 'hover:border-emerald-500/70';
+                } else if (callerLetter === 'B') {
+                  avatarGrad = 'from-blue-600 via-indigo-600 to-sky-500';
+                  progBarColor = 'bg-blue-600';
+                  phoneBorderGlow = 'hover:border-blue-500/70';
+                } else if (callerLetter === 'C') {
+                  avatarGrad = 'from-purple-600 via-fuchsia-600 to-pink-500';
+                  progBarColor = 'bg-purple-600';
+                  phoneBorderGlow = 'hover:border-purple-500/70';
+                }
+
+                return `
+                  <!-- Small iPhone Mobile Mockup for ${c.name} -->
+                  <div class="relative w-full max-w-[320px] bg-slate-950 rounded-[2.8rem] p-3 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.35)] border-[3.5px] border-slate-800 ${phoneBorderGlow} transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+                    
+                    <!-- Left Hardware Buttons (Volume & Silence) -->
+                    <div class="absolute -left-[5px] top-16 w-[3px] h-6 bg-slate-700 rounded-l shadow-xs"></div>
+                    <div class="absolute -left-[5px] top-26 w-[3px] h-9 bg-slate-700 rounded-l shadow-xs"></div>
+                    <div class="absolute -left-[5px] top-38 w-[3px] h-9 bg-slate-700 rounded-l shadow-xs"></div>
+                    
+                    <!-- Right Hardware Button (Power Lock) -->
+                    <div class="absolute -right-[5px] top-24 w-[3px] h-12 bg-slate-700 rounded-r shadow-xs"></div>
+
+                    <!-- Inner Mobile Screen Area -->
+                    <div class="bg-gradient-to-b from-slate-50 via-white to-slate-50 rounded-[2.3rem] p-3.5 sm:p-4 flex flex-col justify-between border border-slate-200/60 min-h-[410px] relative overflow-hidden shadow-inner">
+                      
+                      <!-- Screen Header: Status Bar & Top Dynamic Island -->
                       <div>
-                        <div class="font-bold text-base text-slate-900">${c.name}</div>
-                        <div class="text-[11px] font-mono text-slate-400">Portal @${c.username}</div>
+                        <!-- Mobile Status Bar -->
+                        <div class="flex items-center justify-between px-2 pt-0.5 pb-2 text-[10px] font-bold text-slate-800 tracking-tight">
+                          <span class="font-mono text-slate-700">${currentTimeStr}</span>
+                          
+                          <!-- Top Dynamic Island Pill -->
+                          <div class="w-20 h-4 bg-black rounded-full flex items-center justify-between px-2 shadow-inner">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-900 border border-slate-800"></div>
+                            <div class="w-1.5 h-1.5 rounded-full ${c.is_online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}"></div>
+                          </div>
+                          
+                          <div class="flex items-center gap-1 font-mono text-[9px] text-slate-600">
+                            <span>5G</span>
+                            <span>100%</span>
+                          </div>
+                        </div>
+
+                        <!-- Caller Identity Badge Inside Mobile -->
+                        <div class="mt-1.5 p-3 rounded-2xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-between">
+                          <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad} text-white font-black text-sm flex items-center justify-center shadow-sm">
+                              ${callerLetter}
+                            </div>
+                            <div class="text-left">
+                              <div class="font-bold text-sm text-slate-900 leading-tight">${c.name}</div>
+                              <div class="text-[10px] font-mono text-slate-400">Desk @${c.username}</div>
+                            </div>
+                          </div>
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${c.is_online ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500'}">
+                            <span class="w-1.5 h-1.5 rounded-full ${c.is_online ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}"></span>
+                            <span>${c.is_online ? 'Active' : 'Offline'}</span>
+                          </span>
+                        </div>
+
+                        <!-- Calling Progress Inside Phone -->
+                        <div class="mt-3 p-3 rounded-2xl bg-slate-50/90 border border-slate-200/70">
+                          <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
+                            <span>Calling Progress</span>
+                            <span class="font-bold font-mono text-slate-900">${c.completed_calls} / ${c.total_assigned}</span>
+                          </div>
+                          <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                            <div class="h-full ${progBarColor} rounded-full transition-all duration-500" style="width: ${c.completion_percentage}%"></div>
+                          </div>
+                          <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-mono">
+                            <span>Completion Rate</span>
+                            <span class="font-bold text-slate-800">${c.completion_percentage}%</span>
+                          </div>
+                        </div>
+
+                        <!-- Dual Telemetry Tiles Inside Phone -->
+                        <div class="grid grid-cols-2 gap-2 mt-2.5">
+                          <div class="p-2.5 rounded-xl bg-white border border-slate-200/80 text-center shadow-xs">
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Today Calls</span>
+                            <span class="font-mono font-black text-lg text-slate-900">${c.today_calls}</span>
+                          </div>
+                          <div class="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-center shadow-xs">
+                            <span class="text-[9px] uppercase font-bold text-emerald-700 block tracking-wider">Interested</span>
+                            <span class="font-mono font-black text-lg text-emerald-600">${c.today_interested}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${c.is_online ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
-                      <span class="w-1.5 h-1.5 rounded-full ${c.is_online ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
-                      <span>${c.is_online ? 'Active' : 'Offline'}</span>
-                    </span>
-                  </div>
 
-                  <div>
-                    <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
-                      <span>Calling Progress</span>
-                      <span>${c.completed_calls} / ${c.total_assigned} (${c.completion_percentage}%)</span>
-                    </div>
-                    <div class="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div class="h-full bg-emerald-600 rounded-full transition-all duration-300" style="width: ${c.completion_percentage}%"></div>
-                    </div>
-                  </div>
+                      <!-- Phone Footer: Activity Badge & iPhone Home Swipe Bar -->
+                      <div class="mt-3 pt-2.5 border-t border-slate-100">
+                        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/60 text-[10px] flex items-center justify-between text-slate-600">
+                          <span>Last: <b class="text-slate-800">${c.last_active_human}</b></span>
+                          ${c.last_activity ? `<span class="truncate max-w-[100px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">${c.last_activity.status}</span>` : '<span class="text-slate-400 font-medium">Ready to dial</span>'}
+                        </div>
 
-                  <div class="grid grid-cols-2 gap-2 text-center py-2 bg-slate-50 rounded-xl border border-slate-100">
-                    <div>
-                      <span class="text-[10px] uppercase font-bold text-slate-400 block">Today's Calls</span>
-                      <span class="font-bold text-base text-slate-900 font-mono">${c.today_calls}</span>
-                    </div>
-                    <div>
-                      <span class="text-[10px] uppercase font-bold text-emerald-600 block">Interested Leads</span>
-                      <span class="font-bold text-base text-emerald-600 font-mono">${c.today_interested}</span>
-                    </div>
-                  </div>
+                        <!-- iPhone Home Swipe Indicator -->
+                        <div class="w-24 h-1 bg-slate-300 rounded-full mx-auto mt-2.5"></div>
+                      </div>
 
-                  <div class="text-xs text-slate-500 border-t pt-2.5 flex items-center justify-between">
-                    <span>Last Active: <b>${c.last_active_human}</b></span>
-                    ${c.last_activity ? `<span class="truncate max-w-[130px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">${c.last_activity.status}</span>` : '<span class="text-slate-400">Ready to call</span>'}
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
 
-          <!-- Real-Time Activity Feed -->
-          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div class="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-blue-600">stream</span>
-                <h3 class="font-bold text-slate-900 text-sm">Live Call Telemetry (Real-Time Feed)</h3>
+          <!-- Real-Time Activity Feed: Live Call Telemetry (Spacious, Crisp & Responsive) -->
+          <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] mt-2">
+            <div class="px-6 py-5 border-b border-slate-200 bg-slate-50/60 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="p-1.5 rounded-xl bg-blue-50 text-blue-600 material-symbols-outlined text-[18px]">stream</span>
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base">Live Call Telemetry (Real-Time Feed)</h3>
               </div>
-              <span class="text-xs text-slate-400">Auto-refreshes every 15s</span>
+              <span class="text-xs font-semibold text-slate-400 bg-white border border-slate-200 px-3 py-1 rounded-full">Auto-sync active (15s)</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500">
+                <thead class="bg-slate-50/70 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th class="px-5 py-3">Time</th>
-                    <th class="px-5 py-3">Caller</th>
-                    <th class="px-5 py-3">Client & Business</th>
-                    <th class="px-5 py-3">Phone</th>
-                    <th class="px-5 py-3">Call Status</th>
-                    <th class="px-5 py-3">Remarks</th>
+                    <th class="px-6 py-3.5 whitespace-nowrap">Time</th>
+                    <th class="px-6 py-3.5 whitespace-nowrap">Caller Desk</th>
+                    <th class="px-6 py-3.5">Client & Business</th>
+                    <th class="px-6 py-3.5 whitespace-nowrap">Phone</th>
+                    <th class="px-6 py-3.5 whitespace-nowrap">Call Status</th>
+                    <th class="px-6 py-3.5">Discussion Remarks</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                   ${liveFeed.length === 0 ? `
-                    <tr><td colspan="6" class="px-5 py-10 text-center text-slate-400">No calls made yet. Callers A, B, and C can start dialing from their respective portals.</td></tr>
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No calls made yet. Callers A, B, and C can start dialing from their respective portals.</td></tr>
                   ` : liveFeed.map(log => `
-                    <tr class="hover:bg-slate-50/80 transition">
-                      <td class="px-5 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">${log.created_at.split(' ')[1] || log.created_at}</td>
-                      <td class="px-5 py-3 font-bold text-slate-900 whitespace-nowrap">${log.caller_name}</td>
-                      <td class="px-5 py-3">
-                        <div class="font-semibold text-slate-900">${log.contact_name}</div>
-                        <div class="text-xs text-slate-500">${log.company_name || 'Individual'}</div>
+                    <tr class="hover:bg-slate-50/90 transition">
+                      <td class="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap">${log.created_at.split(' ')[1] || log.created_at}</td>
+                      <td class="px-6 py-4 font-bold text-slate-900 whitespace-nowrap">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 font-bold text-xs">${log.caller_name}</span>
                       </td>
-                      <td class="px-5 py-3 font-mono text-xs text-slate-700 whitespace-nowrap">${log.phone}</td>
-                      <td class="px-5 py-3 whitespace-nowrap">
+                      <td class="px-6 py-4">
+                        <div class="font-bold text-slate-900">${log.contact_name}</div>
+                        <div class="text-xs text-slate-500 font-medium">${log.company_name || 'Individual Client'}</div>
+                      </td>
+                      <td class="px-6 py-4 font-mono text-xs font-bold text-slate-800 whitespace-nowrap">${log.phone}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
                         ${getStatusBadge(log.new_status)}
                       </td>
-                      <td class="px-5 py-3 text-xs text-slate-600 max-w-xs truncate">${log.remarks || '—'}</td>
+                      <td class="px-6 py-4 text-xs text-slate-600 max-w-xs font-medium">${log.remarks || '—'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
