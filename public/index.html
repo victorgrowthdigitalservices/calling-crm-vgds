@@ -571,13 +571,29 @@ function makeLead(caller){
   };
 }
 
-const STORAGE_KEY = 'vgds_crm_leads_v11';
-const REC_STORAGE_KEY = 'vgds_crm_recordings_v11';
+// Purge any legacy fake/mock data from earlier versions
+(function purgeLegacy(){
+  for(let i=0; i<=20; i++){
+    try{
+      localStorage.removeItem('vgds_crm_leads_v' + i);
+      localStorage.removeItem('vgds_crm_recordings_v' + i);
+      localStorage.removeItem('vgds_crm_seq_v' + i);
+    }catch(e){}
+  }
+  try{
+    localStorage.removeItem('vgds_crm_leads');
+    localStorage.removeItem('vgds_crm_recordings');
+    localStorage.removeItem('vgds_crm_leads_clean_v11');
+  }catch(e){}
+})();
+
+const STORAGE_KEY = 'vgds_crm_fresh_leads_v100';
+const REC_STORAGE_KEY = 'vgds_crm_fresh_recordings_v100';
 
 function saveStorage(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
-    localStorage.setItem('vgds_crm_seq_v11', String(SEQ));
+    localStorage.setItem('vgds_crm_seq_v100', String(SEQ));
   }catch(e){}
 }
 function loadStorage(){
@@ -587,7 +603,7 @@ function loadStorage(){
       const arr = JSON.parse(raw);
       if(Array.isArray(arr) && arr.length > 0){
         LEADS = arr;
-        SEQ = +(localStorage.getItem('vgds_crm_seq_v11') || (LEADS.length + 1));
+        SEQ = +(localStorage.getItem('vgds_crm_seq_v100') || (LEADS.length + 1));
         return true;
       }
     }
@@ -595,37 +611,92 @@ function loadStorage(){
   return false;
 }
 
-function saveRecordingsToStorage(){
-  try{ localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(RECORDINGS)); }catch(e){}
+// IndexedDB Storage for Audio Recordings to bypass localStorage 5MB limit
+let idbConn = null;
+function getIDB(){
+  return new Promise(resolve => {
+    if(idbConn) return resolve(idbConn);
+    try{
+      const req = indexedDB.open('vgds_crm_recordings_store', 1);
+      req.onupgradeneeded = ev => {
+        const d = ev.target.result;
+        if(!d.objectStoreNames.contains('recs')) d.createObjectStore('recs', { keyPath: 'id' });
+      };
+      req.onsuccess = ev => { idbConn = ev.target.result; resolve(idbConn); };
+      req.onerror = () => resolve(null);
+    }catch(err){ resolve(null); }
+  });
 }
-function loadRecordingsFromStorage(){
+
+async function saveRecordingsToStorage(){
+  try{
+    // Save lightweight version to localStorage (prevent QuotaExceededError)
+    const light = RECORDINGS.map(r => {
+      if(r.url && r.url.length > 500 && r.url.startsWith('data:')){
+        return { ...r, url: r.serverUrl || '' };
+      }
+      return r;
+    });
+    localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(light));
+  }catch(e){}
+
+  // Persist complete recordings with full audio data in IndexedDB
+  const db = await getIDB();
+  if(db){
+    try{
+      const tx = db.transaction('recs', 'readwrite');
+      const store = tx.objectStore('recs');
+      store.clear();
+      RECORDINGS.forEach(r => store.put(r));
+    }catch(e){}
+  }
+}
+
+async function loadRecordingsFromStorage(){
   try{
     const raw = localStorage.getItem(REC_STORAGE_KEY);
     if(raw){ RECORDINGS = JSON.parse(raw) || []; }
   }catch(e){ RECORDINGS = []; }
+
+  // Load full audio recordings from IndexedDB
+  const db = await getIDB();
+  if(db){
+    try{
+      const tx = db.transaction('recs', 'readonly');
+      const store = tx.objectStore('recs');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        if(req.result && req.result.length > 0){
+          RECORDINGS = req.result;
+          if(S.tab === 'recordings') renderTab();
+        }
+      };
+    }catch(e){}
+  }
 }
 loadRecordingsFromStorage();
 
 (function seed(){
-  // Load existing data from storage if present
   if(loadStorage()) return;
-
-  // Initialize all 126 leads (Caller A: 38, Caller B: 38, Caller C: 38, Unassigned: 12)
-  // All initial call metrics/activity strictly set to 0 (status: 'NC', history: [], followUp: null, convertedAt: null)
-  for(let i=0; i<126; i++){
-    const c = i < 114 ? 'ABC'[i % 3] : null;
-    const L = makeLead(c);
-    L.status = 'NC';
-    L.history = [];
-    L.followUp = null;
-    L.convertedAt = null;
-    LEADS.push(L);
-  }
+  // Strictly start with 0 leads
+  LEADS = [];
+  RECORDINGS = [];
   saveStorage();
 })();
 
+function wipeAllLeadsToZero(){
+  if(confirm('Are you sure you want to delete ALL leads and start 100% fresh with 0 leads?')){
+    LEADS = [];
+    RECORDINGS = [];
+    saveStorage();
+    saveRecordingsToStorage();
+    toast('All data deleted! CRM is 100% clean with 0 leads.');
+    render();
+  }
+}
+
 function resetActivityMetrics(){
-  if(confirm('Reset all calling activity metrics to 0? All 126 leads will remain intact, and all desks will be fresh with 0 calls logged.')){
+  if(confirm('Reset all calling activity metrics to 0? All call records will be reset to 0.')){
     LEADS.forEach(l=>{
       l.status='NC';
       l.history=[];
@@ -635,7 +706,7 @@ function resetActivityMetrics(){
     RECORDINGS = [];
     saveStorage();
     saveRecordingsToStorage();
-    toast('All metrics reset to 0. All 126 leads are fresh & ready to call.');
+    toast('All metrics reset to 0. All desks are fresh with 0 calls logged.');
     render();
   }
 }
@@ -1040,6 +1111,10 @@ function openPass(role){
 }
 function login(role){
   S.role=role;S.tab=role==='admin'?'dispatch':'desk';
+  try{
+    localStorage.setItem('vgds_crm_active_role', role);
+    localStorage.setItem('vgds_crm_active_tab', S.tab);
+  }catch(e){}
   if(role!=='admin'){S.desk={idx:firstQueueIdx(role),status:null,remark:'',fu:'',conv:false};const d=LEADS.filter(l=>l.caller===role&&isDue(l)).length;if(d)setTimeout(()=>toast(`${d} follow-up${d>1?'s are':' is'} due now — see the Follow-ups tab.`),400)}
   render();window.scrollTo(0,0);
 }
@@ -1074,15 +1149,25 @@ function render(){
     <div class="right">
       ${isA?`<span class="live-dot"><i></i>Live</span>`:''}
       <span class="clock num" id="clock"></span>
-      <button class="btn sm" id="logout">${ic('logout',15)} Log out</button>
+      <button class="btn sm" id="logout">${ic('logout',15)} Exit Portal</button>
     </div>
   </div>
   <div class="wrap"><nav class="tabs" role="tablist">${tabs.map(([k,l,i])=>`<button class="tab ${S.tab===k?'on':''}" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">${ic(i,16)}${l}${count(k)}</button>`).join('')}</nav></div>
   </header>
   <main class="wrap" id="main"></main>
   <div class="foot">Victor Growth Digital Services · Calling CRM · design preview with sample data</div>`;
-  app.querySelector('#logout').onclick=()=>{S.role=null;render();window.scrollTo(0,0)};
-  app.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;render()});
+  app.querySelector('#logout').onclick=()=>{
+    try{
+      localStorage.removeItem('vgds_crm_active_role');
+      localStorage.removeItem('vgds_crm_active_tab');
+    }catch(e){}
+    S.role=null;render();window.scrollTo(0,0);
+  };
+  app.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
+    S.tab=b.dataset.tab;
+    try{ localStorage.setItem('vgds_crm_active_tab', S.tab); }catch(e){}
+    render();
+  });
   tickClock();
   renderTab();
 }
@@ -1146,8 +1231,8 @@ function aDispatch(m){
       <p>Import your daily calling Excel sheet (.xlsx or .csv), automatically filter duplicate numbers, and dispatch fresh leads to caller queues.</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn soft" id="dsp-sample-btn">${ic('file',16)} Load Sample Sheet</button>
-      <button class="btn" style="color:var(--warn);border-color:#F8D7DA" id="dsp-reset-act">${ic('history',16)} Reset Today's Metrics (0 Calls)</button>
+      <button class="btn" style="color:var(--warn);border-color:#F8D7DA;background:#FFF5F5" id="dsp-wipe-all">🗑️ Wipe All Data (0 Leads)</button>
+      <button class="btn" style="color:var(--ink-2);border-color:var(--line)" id="dsp-reset-act">${ic('history',16)} Reset Today's Calls (0 Calls)</button>
     </div>
   </div>
 
@@ -1706,18 +1791,12 @@ function cDesk(m){
     m.innerHTML=`
     <div class="empty-desk" style="padding:48px 24px;text-align:center;background:#fff;border:1.5px dashed var(--line);border-radius:var(--r-lg);max-width:620px;margin:32px auto;box-shadow:0 4px 14px rgba(16,48,95,.03)">
       <div style="font-size:46px;margin-bottom:12px">📞</div>
-      <h2 style="font-size:22px;font-weight:700;color:var(--ink);margin:0 0 8px">All Leads Completed or None Assigned</h2>
-      <p class="muted" style="margin:0 0 24px;font-size:14.5px;line-height:1.5">
-        Your calling desk is clear. You can log a new call anytime or wait for your admin to dispatch fresh leads.
+      <h2 style="font-size:20px;font-weight:700;color:var(--ink);margin:0 0 8px">No Leads Assigned Yet</h2>
+      <p class="muted" style="margin:0;font-size:14px;line-height:1.5">
+        Aapke desk mein abhi koi lead nahi hai. Jaise hi Admin daily Excel sheet upload karke dispatch karega, leads yahan automatic Lead 1 se start ho jayengi.
       </p>
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-        <button class="btn primary" id="btn-add-call-first" style="font-size:14px;padding:12px 26px;font-weight:700">
-          ➕ Log New Call / Lead
-        </button>
-      </div>
     </div>`;
-    const bFirst = m.querySelector('#btn-add-call-first');
-    if(bFirst) bFirst.onclick = () => openAddCallModal(S.role);
+    
     return;
   }
   if(S.desk.idx>=ls.length)S.desk.idx=0;
@@ -1734,7 +1813,6 @@ function cDesk(m){
       <div class="bar"><span style="width:${pct}%;background:${CALLERS[S.role].hex}"></span></div></div>
     ${dueN?`<button class="btn" id="go-due" style="border-color:#F3C7C4;color:var(--warn);background:var(--warn-soft)">${ic('bell',16)} ${dueN} follow-up${dueN>1?'s':''} due</button>`:''}
     <div class="nav-btns">
-      <button class="btn" id="btn-desk-add" style="font-weight:700">${ic('plus',14)} Add Call</button>
       <button class="btn" id="prev" ${S.desk.idx===0?'disabled':''}>${ic('left',16)} Previous</button>
       <button class="btn" id="next">Skip ${ic('arrow',16)}</button>
     </div>
@@ -1769,7 +1847,7 @@ function cDesk(m){
     <div class="form-col">
       <section class="panel" style="display:grid;gap:14px">
         <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin:0">1. Select Call Outcome</h3>
-        <div class="status-grid">${Object.keys(ST).filter(k=>k!=='NC').map(k=>`<button class="sbtn ${D.status===k?'on':''} ${k==='CB'?'full':''}" data-st="${k}" style="${D.status===k?`color:${ST[k].hex};background:${ST[k].hex}12`:``}">><i style="background:${ST[k].hex}"></i><span style="color:var(--ink)">${ST[k].label}</span></button>`).join('')}</div>
+        <div class="status-grid">${Object.keys(ST).filter(k=>k!=='NC').map(k=>`<button class="sbtn ${D.status===k?'on':''} ${k==='CB'?'full':''}" data-st="${k}" style="${D.status===k?`color:${ST[k].hex};background:${ST[k].hex}12`:``}"><i style="background:${ST[k].hex}"></i><span style="color:var(--ink)">${ST[k].label}</span></button>`).join('')}</div>
         
         ${needsFU?`<div class="cb-box"><label class="field" for="fu-dt" style="gap:6px"><span style="font-size:12.5px;font-weight:600;color:#1E57B0">${ic('clock',14)} Callback date & time</span>
           <input type="datetime-local" class="input" id="fu-dt" value="${D.fu}"></label>
@@ -1825,8 +1903,7 @@ function cDesk(m){
   m.querySelector('#next').onclick=()=>go((S.desk.idx+1)%ls.length);
   const gd=m.querySelector('#go-due');if(gd)gd.onclick=()=>{S.tab='follow';render()};
   
-  const bDeskAdd = m.querySelector('#btn-desk-add');
-  if(bDeskAdd) bDeskAdd.onclick = () => openAddCallModal(S.role);
+  
 
   m.querySelector('#copy-ph').onclick=()=>{
     const t='+91'+L.phone;
@@ -1985,6 +2062,19 @@ function cPerf(m){
   </section>`;
 }
 
+(function initSession(){
+  try{
+    const savedRole = localStorage.getItem('vgds_crm_active_role');
+    const savedTab = localStorage.getItem('vgds_crm_active_tab');
+    if(savedRole && (savedRole === 'admin' || CALLERS[savedRole])){
+      S.role = savedRole;
+      S.tab = savedTab || (savedRole === 'admin' ? 'dispatch' : 'desk');
+      if(savedRole !== 'admin'){
+        S.desk = { idx: firstQueueIdx(savedRole), status: null, remark: '', fu: '', conv: false, recording: null };
+      }
+    }
+  }catch(e){}
+})();
 render();
 </script>
 
