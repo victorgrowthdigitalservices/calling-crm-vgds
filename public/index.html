@@ -443,26 +443,343 @@ textarea.input{min-height:84px;resize:vertical}
 .toast i{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
 .foot{font-size:12px;color:var(--ink-3);text-align:center;padding-bottom:24px}
 
-@media (max-width:1000px){
-  .portal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid-2,.desk,.hist,.sum{grid-template-columns:minmax(0,1fr)}
-  .phones{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px 16px}
-  .grid-3,.rank{grid-template-columns:minmax(0,1fr)}
-  .alloc{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .fu-row{grid-template-columns:minmax(0,1fr) auto}
+/* ================= Comprehensive Mobile-Friendly Responsiveness ================= */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
 }
-@media (max-width:560px){
-  .portal-grid{grid-template-columns:minmax(0,1fr)}
-  .pcard{min-height:0}
-  .topbar .logo{height:32px}
-  .clock{display:none}
-  .status-grid{grid-template-columns:minmax(0,1fr)}
-  .lead-card{padding:18px}
-  .phone-box .ph{font-size:21px}
-  .mini-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .big-kpis{grid-template-columns:minmax(0,1fr)}
-  .phones{padding:24px 12px}
-  .pins input{width:48px;height:56px}
+@media (max-width: 920px) {
+  .wrap {
+    padding-inline: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+  }
+  .portal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+  .grid-2, .desk, .hist, .sum {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .phones {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+    gap: 20px 14px !important;
+  }
+  .grid-3, .rank {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .alloc {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .fu-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Touch target sizes & prevent iOS Safari auto-zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Topbar & Sticky Header on Mobile */
+  .topbar {
+    padding-block: 8px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+  .topbar .wrap {
+    padding-inline: 12px !important;
+    gap: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .topbar .logo {
+    height: 30px !important;
+    width: auto !important;
+  }
+  .role-pill {
+    font-size: 12px !important;
+    padding: 3px 8px !important;
+    gap: 6px !important;
+  }
+  .role-pill .av {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+  }
+  .topbar .right {
+    margin-left: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .clock, .live-dot {
+    display: none !important;
+  }
+  #logout {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    min-height: 36px !important;
+  }
+
+  /* Horizontally Swipeable Navigation Tabs */
+  nav.tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding: 4px 0 2px !important;
+    width: 100% !important;
+    touch-action: pan-x !important;
+  }
+  nav.tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+  nav.tabs .tab {
+    flex-shrink: 0 !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    border-bottom: 2.5px solid transparent !important;
+  }
+  nav.tabs .tab.on {
+    border-bottom-color: var(--green) !important;
+    color: var(--ink) !important;
+    font-weight: 700 !important;
+  }
+
+  /* Calling Desk Single Column Layout */
+  .desk-top {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .desk-top .prog {
+    width: 100% !important;
+  }
+  .desk-top .nav-btns {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .desk-top .nav-btns .btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+  }
+  .desk {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 16px !important;
+  }
+  .lead-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .lead-card .co {
+    font-size: 20px !important;
+  }
+  .facts {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Phone Box & Mobile Action Buttons (Call, Copy, WhatsApp) */
+  .phone-box {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+    margin-block: 10px !important;
+  }
+  .phone-box .ph {
+    font-size: 20px !important;
+    text-align: center !important;
+    margin-inline: auto !important;
+  }
+  .phone-box > div {
+    margin-left: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+  .phone-box > div .btn,
+  .phone-box > div a.btn {
+    flex: 1 1 calc(33.333% - 6px) !important;
+    min-width: 85px !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    padding: 8px 6px !important;
+  }
+
+  /* Outcome Selection Grid */
+  .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .status-grid .sbtn {
+    min-height: 48px !important;
+    font-size: 12.5px !important;
+    padding: 8px 10px !important;
+  }
+  .status-grid .sbtn.full {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Audio player 100% width on mobile */
+  audio {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Save Outcome Button */
+  #save {
+    min-height: 50px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+  }
+
+  /* Tables & Lists Touch Scrolling */
+  .tbl-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+  }
+  .toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .toolbar input, .toolbar select {
+    width: 100% !important;
+    min-height: 42px !important;
+  }
+
+  /* KPIs & Summary */
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .big-kpis {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .mini-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  /* Live Monitor Caller Phones */
+  .phones {
+    grid-template-columns: 1fr !important;
+    padding: 16px 10px !important;
+    gap: 16px !important;
+  }
+  .phone-wrap {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 580px) {
+  /* Portal Gateway Screen */
+  .portal {
+    padding-block: 12px 28px !important;
+    gap: 16px !important;
+  }
+  .portal-topbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  .portal-brand {
+    gap: 10px !important;
+  }
+  .portal-brand .logo {
+    height: 36px !important;
+  }
+  .portal-brand-text b {
+    font-size: 14px !important;
+  }
+  .portal-brand-text span {
+    font-size: 10px !important;
+  }
+  .portal-head h1 {
+    font-size: 22px !important;
+  }
+  .portal-head p {
+    font-size: 13px !important;
+  }
+  .portal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .pcard {
+    min-height: auto !important;
+    padding: 18px 14px !important;
+  }
+
+  /* PIN Modal */
+  .overlay {
+    padding: 12px !important;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: 360px !important;
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+  }
+  .pins {
+    gap: 8px !important;
+    justify-content: center !important;
+  }
+  .pins input {
+    width: 44px !important;
+    height: 52px !important;
+    font-size: 22px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Compact Phone Action Buttons */
+  .phone-box > div {
+    flex-direction: column !important;
+  }
+  .phone-box > div .btn,
+  .phone-box > div a.btn {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .status-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .alloc {
+    grid-template-columns: 1fr !important;
+  }
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -507,9 +824,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 /* ======================= Config ======================= */
 const PASS={admin:['1313','4090'],A:['0000','1111'],B:['0000','2222'],C:['0000','3333']};
 const CALLERS={
-  A:{name:'Caller A',color:'var(--cA)',soft:'var(--cA-soft)',hex:'#2F66D0'},
-  B:{name:'Caller B',color:'var(--cB)',soft:'var(--cB-soft)',hex:'#17A34A'},
-  C:{name:'Caller C',color:'var(--cC)',soft:'var(--cC-soft)',hex:'#E3961A'},
+  A:{name:'Jumana Malekul',short:'Jumana',initial:'J',color:'var(--cA)',soft:'var(--cA-soft)',hex:'#2F66D0'},
+  B:{name:'Sameena Rubab',short:'Sameena',initial:'S',color:'var(--cB)',soft:'var(--cB-soft)',hex:'#17A34A'},
+  C:{name:'Sumaiya Manha',short:'Sumaiya',initial:'Su',color:'var(--cC)',soft:'var(--cC-soft)',hex:'#E3961A'},
 };
 const ST={
   NC:{label:'Not Called',hex:'#8C9AB0'},
@@ -797,18 +1114,18 @@ function renderPortal(){
     </div>
 
     <div class="portal-grid">
-      ${card('A','Caller A Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('A'),'','CALLER A')}
-      ${card('B','Caller B Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('B'),'','CALLER B')}
-      ${card('C','Caller C Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('C'),'','CALLER C')}
-      ${card('admin','Admin Command Center','Daily Excel upload & dispatch, team lead allocation, live telemetry, and conversion analytics.','shield',`${LEADS.length} leads in database · 3 callers`,'admin','ADMIN MASTER')}
+      ${card('A','Jumana Malekul Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('A'),'','JUMANA')}
+      ${card('B','Sameena Rubab Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('B'),'','SAMEENA')}
+      ${card('C','Sumaiya Manha Desk','Dedicated calling queue, objection-ready pitch scripts, client details, and quick-log outcomes.','phone',cm('C'),'','SUMAIYA')}
+      ${card('admin','Admin Command Center','Daily Excel upload & dispatch, team lead allocation, live telemetry, and conversion analytics.','shield',`${LEADS.length} leads in database · 3 team members`,'admin','ADMIN MASTER')}
     </div>
 
     <div class="demo-note">
       <span style="font-weight:600">Quick Unlock PINs:</span>
       <span>Admin Master: <code>1313</code></span>
-      <span>Caller A: <code>0000</code></span>
-      <span>Caller B: <code>0000</code></span>
-      <span>Caller C: <code>0000</code></span>
+      <span>Jumana Malekul: <code>0000</code></span>
+      <span>Sameena Rubab: <code>0000</code></span>
+      <span>Sumaiya Manha: <code>0000</code></span>
     </div>
   </div>`;
   app.querySelectorAll('[data-portal]').forEach(b=>b.onclick=()=>openPass(b.dataset.portal));
@@ -865,7 +1182,7 @@ function openAddCallModal(defaultCaller){
           <input class="input" id="m-website" placeholder="https://...">
         </label>
         <label class="field">
-          <span style="font-size:12px;font-weight:600">Assign To Caller</span>
+          <span style="font-size:12px;font-weight:600">Assign To Team Member</span>
           <select class="select" id="m-caller" style="padding-block:7px">
             ${'ABC'.split('').map(c=>`<option value="${c}" ${c===caller?'selected':''}>${CALLERS[c].name}</option>`).join('')}
             <option value="" ${!caller?'selected':''}>Unassigned Pool</option>
@@ -1121,12 +1438,12 @@ function login(role){
 
 /* ======================= Shell ======================= */
 const ADMIN_TABS=[
-  ['dispatch','📥 Upload Sheet & Dispatch','upload'],
-  ['live','📊 Live Monitor','live'],
-  ['leads','👥 All Leads & Allocation','users'],
-  ['recordings','🎙️ Call Recordings','mic'],
-  ['reports','📈 Performance Reports','chart'],
-  ['history','🕒 Lead History','history']
+  ['dispatch','Upload Sheet & Dispatch','upload'],
+  ['live','Live Monitor','live'],
+  ['leads','All Leads & Allocation','users'],
+  ['recordings','Call Recordings','mic'],
+  ['reports','Performance Reports','chart'],
+  ['history','Lead History','history']
 ];
 const CALLER_TABS=[['desk','Calling Desk','phone'],['mine','My Leads','list'],['follow','Follow-ups','bell'],['perf','My Performance','target']];
 function render(){
@@ -1178,7 +1495,7 @@ function renderTab(){
   const f={dispatch:aDispatch,live:aLive,leads:aLeads,recordings:aRecordings,reports:aReports,history:aHistory,desk:cDesk,mine:cMine,follow:cFollow,perf:cPerf}[S.tab];
   if(f) f(m);
 }
-const av=(c,s='')=>`<span class="avatar ${s}" style="background:${CALLERS[c].soft};color:${CALLERS[c].color}">${c}</span>`;
+const av=(c,s='')=>`<span class="avatar ${s}" style="background:${CALLERS[c].soft};color:${CALLERS[c].color}">${CALLERS[c]?.initial||c}</span>`;
 
 /* ======================= ADMIN: Live ======================= */
 const OUT_LABEL={INT:'Interested',CB:'Busy – call back later',FU:'Follow-up required',NI:'Not interested',NR:'Call not received',NRCH:'Number not reachable'};
@@ -1289,16 +1606,16 @@ function aDispatch(m){
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
         <button class="btn primary" id="dsp-auto-split" ${r.fresh.length?'':'disabled'} style="justify-content:center;padding:12px">
-          ${ic('users',18)} Split Equally (Caller A, B, C)
+          ${ic('users',18)} Split Equally (Jumana, Sameena, Sumaiya)
         </button>
         <button class="btn" id="dsp-to-a" ${r.fresh.length?'':'disabled'} style="justify-content:center">
-          ${av('A')} Send All to Caller A
+          ${av('A')} Send All to Jumana
         </button>
         <button class="btn" id="dsp-to-b" ${r.fresh.length?'':'disabled'} style="justify-content:center">
-          ${av('B')} Send All to Caller B
+          ${av('B')} Send All to Sameena
         </button>
         <button class="btn" id="dsp-to-c" ${r.fresh.length?'':'disabled'} style="justify-content:center">
-          ${av('C')} Send All to Caller C
+          ${av('C')} Send All to Sumaiya
         </button>
         <button class="btn soft" id="dsp-to-pool" ${r.fresh.length?'':'disabled'} style="justify-content:center">
           📦 Store in Unassigned Pool
@@ -1309,7 +1626,7 @@ function aDispatch(m){
 
   <section class="panel">
     <div class="panel-h">
-      <h3>2. Current Caller Queue Status</h3>
+      <h3>2. Current Team Queue Status</h3>
       <button class="btn soft" id="dsp-rebalance" ${un?'':'disabled'}>${ic('users',16)} Split ${un} Unassigned Leads Equally</button>
     </div>
     <div class="alloc">
@@ -1393,7 +1710,7 @@ function aDispatch(m){
     const unassigned = LEADS.filter(l=>!l.caller);
     unassigned.forEach((l,i)=>{ l.caller = 'ABC'[i%3]; });
     saveStorage();
-    toast(`Assigned ${unassigned.length} leads equally across Caller A, B, and C.`);
+    toast(`Assigned ${unassigned.length} leads equally across Jumana, Sameena, and Sumaiya.`);
     renderTab();
   };
 
@@ -1485,12 +1802,12 @@ function aLeads(m){
   <section class="panel">
     <div class="toolbar">
       <input class="input grow" id="lf-q" placeholder="Search name, company, phone or city" value="${esc(S.leadFilter.q)}">
-      <select class="select" id="lf-caller"><option value="all">All callers</option><option value="none">Unassigned</option>${'ABC'.split('').map(c=>`<option value="${c}">${CALLERS[c].name}</option>`).join('')}</select>
+      <select class="select" id="lf-caller"><option value="all">All team members</option><option value="none">Unassigned</option>${'ABC'.split('').map(c=>`<option value="${c}">${CALLERS[c].name}</option>`).join('')}</select>
       <select class="select" id="lf-status"><option value="all">All statuses</option>${Object.keys(ST).map(k=>`<option value="${k}">${ST[k].label}</option>`).join('')}</select>
-      ${sel.size?`<div class="bulk"><span class="num">${sel.size} selected</span><select class="select" id="bulk-to" style="padding-block:5px"><option value="A">→ Caller A</option><option value="B">→ Caller B</option><option value="C">→ Caller C</option><option value="">Unassign</option></select><button class="btn primary sm" id="bulk-go">Assign</button></div>`:''}
+      ${sel.size?`<div class="bulk"><span class="num">${sel.size} selected</span><select class="select" id="bulk-to" style="padding-block:5px"><option value="A">→ Jumana Malekul</option><option value="B">→ Sameena Rubab</option><option value="C">→ Sumaiya Manha</option><option value="">Unassign</option></select><button class="btn primary sm" id="bulk-go">Assign</button></div>`:''}
     </div>
     <div class="tbl-wrap tbl-scroll"><table>
-      <thead><tr><th style="width:36px"><input type="checkbox" id="sel-all" aria-label="Select all"></th><th>Lead</th><th>Phone</th><th>City</th><th>Caller</th><th>Status</th><th>Last call</th><th>Follow-up</th></tr></thead>
+      <thead><tr><th style="width:36px"><input type="checkbox" id="sel-all" aria-label="Select all"></th><th>Lead</th><th>Phone</th><th>City</th><th>Assigned To</th><th>Status</th><th>Last call</th><th>Follow-up</th></tr></thead>
       <tbody>${shown.map(l=>{const last=l.history[l.history.length-1];return `<tr class="${sel.has(l.id)?'sel':''}">
         <td><input type="checkbox" data-sel="${l.id}" ${sel.has(l.id)?'checked':''} aria-label="Select ${esc(l.company)}"></td>
         <td class="lead-cell"><b>${esc(l.company)}</b><span>${esc(l.name)}</span></td>
@@ -1600,8 +1917,8 @@ function aRecordings(m){
   m.innerHTML = `
   <div class="page-head">
     <div>
-      <h1>🎙️ Team Call Recordings</h1>
-      <p>Listen to authentic voice call recordings uploaded by Caller A, Caller B, and Caller C directly inside your browser.</p>
+      <h1>Team Call Recordings</h1>
+      <p>Listen to authentic voice call recordings uploaded by Jumana Malekul, Sameena Rubab, and Sumaiya Manha directly inside your browser.</p>
     </div>
     <span class="faint num" style="font-size:13px">${countTotal} Total Recordings Uploaded</span>
   </div>
@@ -1609,10 +1926,10 @@ function aRecordings(m){
   <section class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn ${filter.caller==='all'?'primary':''}" id="rf-all">All Callers (${countTotal})</button>
-        <button class="btn ${filter.caller==='A'?'primary':''}" id="rf-a">${av('A')} Caller A (${countA})</button>
-        <button class="btn ${filter.caller==='B'?'primary':''}" id="rf-b">${av('B')} Caller B (${countB})</button>
-        <button class="btn ${filter.caller==='C'?'primary':''}" id="rf-c">${av('C')} Caller C (${countC})</button>
+        <button class="btn ${filter.caller==='all'?'primary':''}" id="rf-all">All Team (${countTotal})</button>
+        <button class="btn ${filter.caller==='A'?'primary':''}" id="rf-a">${av('A')} Jumana Malekul (${countA})</button>
+        <button class="btn ${filter.caller==='B'?'primary':''}" id="rf-b">${av('B')} Sameena Rubab (${countB})</button>
+        <button class="btn ${filter.caller==='C'?'primary':''}" id="rf-c">${av('C')} Sumaiya Manha (${countC})</button>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -1620,7 +1937,7 @@ function aRecordings(m){
           <option value="all" ${filter.status==='all'?'selected':''}>All Outcomes</option>
           ${Object.keys(ST).map(k=>`<option value="${k}" ${filter.status===k?'selected':''}>${ST[k].label}</option>`).join('')}
         </select>
-        <input class="input" id="rf-q" placeholder="Search company, caller, phone..." value="${esc(filter.q)}" style="width:230px">
+        <input class="input" id="rf-q" placeholder="Search company, member, phone..." value="${esc(filter.q)}" style="width:230px">
       </div>
     </div>
 
@@ -1629,7 +1946,7 @@ function aRecordings(m){
       <div style="font-size:42px;margin-bottom:12px">🎙️</div>
       <h3 style="font-size:18px;font-weight:700;color:var(--ink);margin:0 0 6px">No call recordings found</h3>
       <p class="muted" style="max-width:540px;margin:0 auto;font-size:13.5px;line-height:1.5">
-        When Caller A, Caller B, or Caller C logs a call and attaches their audio recording, it will appear here automatically. You can filter by individual caller and play audio directly.
+        When Jumana, Sameena, or Sumaiya logs a call and attaches their audio recording, it will appear here automatically. You can filter by individual caller and play audio directly.
       </p>
     </div>` : `
     <div style="display:grid;gap:14px">
@@ -1657,7 +1974,7 @@ function aRecordings(m){
         </div>
 
         ${r.remark ? `<div style="font-size:13px;background:var(--surface);border-left:3px solid var(--line);padding:8px 12px;border-radius:4px;color:var(--ink-2)">
-          <b>Caller Note:</b> ${esc(r.remark)}
+          <b>Team Note:</b> ${esc(r.remark)}
         </div>` : ''}
 
         <div style="background:var(--navy-soft);border:1px solid #D5E2F5;border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -1706,12 +2023,12 @@ function aReports(m){
   const best=ranked[0].c;
   const sum=k=>rows.reduce((a,r)=>a+r[k],0);
   m.innerHTML=`
-  <div class="page-head"><div><h1>Performance Reports</h1><p>Caller-wise numbers for <b>${label}</b>.</p></div>
+  <div class="page-head"><div><h1>Performance Reports</h1><p>Team-wise numbers for <b>${label}</b>.</p></div>
     <button class="btn primary" id="export">${ic('download',16)} Export to Excel</button></div>
   <section class="toolbar" style="margin:0">
     <div class="seg" role="tablist">${[['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['custom','Custom']].map(([k,l])=>`<button data-range="${k}" class="${S.rep.range===k?'on':''}">${l}</button>`).join('')}</div>
     ${S.rep.range==='custom'?`<input type="date" class="input" id="rf" value="${S.rep.from}" aria-label="From date"><span class="faint">to</span><input type="date" class="input" id="rt" value="${S.rep.to}" aria-label="To date">`:''}
-    <select class="select" id="rc" style="margin-left:auto"><option value="all">All callers</option>${'ABC'.split('').map(c=>`<option value="${c}">${CALLERS[c].name}</option>`).join('')}</select>
+    <select class="select" id="rc" style="margin-left:auto"><option value="all">All team members</option>${'ABC'.split('').map(c=>`<option value="${c}">${CALLERS[c].name}</option>`).join('')}</select>
   </section>
   <section class="rank">${ranked.map((r,i)=>`<div class="rank-card ${i===0?'first':''}"><span class="pos">#${i+1}</span>${av(r.c)}<div style="min-width:0"><b>${CALLERS[r.c].name}</b><div class="muted num" style="font-size:12.5px">${r.interested} interested · ${r.calls} calls · ${r.rate}% conv.</div></div></div>`).join('')}</section>
   <section class="panel">
@@ -1719,9 +2036,9 @@ function aReports(m){
     <div class="chart-box">${chartSVG(from,to,callers)}</div>
   </section>
   <section class="panel">
-    <div class="panel-h"><h3>Caller comparison</h3><span class="faint" style="font-size:12.5px">Conv. rate = interested ÷ unique leads contacted</span></div>
+    <div class="panel-h"><h3>Team comparison</h3><span class="faint" style="font-size:12.5px">Conv. rate = interested ÷ unique leads contacted</span></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Caller</th><th class="r">Assigned</th><th class="r">Calls made</th><th class="r">Unique contacted</th><th class="r">Received</th><th class="r">Not received</th><th class="r">Interested</th><th class="r">Callbacks</th><th class="r">Pending F/U</th><th class="r">Not interested</th><th class="r">Converted</th><th class="r">Remaining</th><th class="r">Avg calls/day</th><th class="r">Conv. rate</th></tr></thead>
+      <thead><tr><th>Team Member</th><th class="r">Assigned</th><th class="r">Calls made</th><th class="r">Unique contacted</th><th class="r">Received</th><th class="r">Not received</th><th class="r">Interested</th><th class="r">Callbacks</th><th class="r">Pending F/U</th><th class="r">Not interested</th><th class="r">Converted</th><th class="r">Remaining</th><th class="r">Avg calls/day</th><th class="r">Conv. rate</th></tr></thead>
       <tbody>${rows.map(r=>`<tr class="${r.c===best&&rows.length>1?'top-row':''}"><td><span style="display:inline-flex;align-items:center;gap:8px">${av(r.c,'')}<b>${CALLERS[r.c].name}</b>${r.c===best&&rows.length>1?'<span class="pill s-INT">Top</span>':''}</span></td>
         ${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining','avg'].map(k=>`<td class="r">${r[k]}</td>`).join('')}<td class="r"><b>${r.rate}%</b></td></tr>`).join('')}
       ${rows.length>1?`<tr><td><b>Team total</b></td>${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining'].map(k=>`<td class="r"><b>${sum(k)}</b></td>`).join('')}<td class="r"><b>${(sum('avg')).toFixed(1)}</b></td><td class="r"><b>${sum('unique')?Math.round(sum('interested')/sum('unique')*100):0}%</b></td></tr>`:''}
@@ -1760,7 +2077,7 @@ function aHistory(m){
         <select class="select" id="h-assign" aria-label="Reassign"><option value="">Unassigned</option>${'ABC'.split('').map(c=>`<option value="${c}" ${L.caller===c?'selected':''}>${CALLERS[c].name}</option>`).join('')}</select></div></div>
       <div class="detail-grid">
         <div><span>Current status</span>${L.convertedAt?'<span><span class="pill s-CONV">Converted</span></span>':`<span>${pill(L.status,false)}</span>`}</div>
-        <div><span>Caller</span><b>${L.caller?CALLERS[L.caller].name:'Unassigned'}</b></div>
+        <div><span>Assigned To</span><b>${L.caller?CALLERS[L.caller].name:'Unassigned'}</b></div>
         <div><span>Next follow-up</span><b class="num" style="${isDue(L)?'color:var(--warn)':''}">${pendingFU(L)?fmtDT(L.followUp):'None'}</b></div>
         <div><span>Total calls</span><b class="num">${L.history.filter(e=>e.status!=='NOTE').length}</b></div>
         <div><span>City</span><b>${esc(L.city)}</b></div>
