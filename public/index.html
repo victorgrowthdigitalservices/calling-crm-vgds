@@ -227,6 +227,8 @@ main.wrap{padding-block:24px 56px;display:grid;gap:22px}
 .s-FU{background:#EFE9FD;color:#6739C2}
 .s-CONV{background:var(--green);color:#fff}
 .s-CONV::before{background:#fff}
+.s-SKIPPED{background:#F1F5F9;color:#475569}
+.s-SKIPPED::before{background:#64748B}
 
 /* Caller cards */
 .ccard{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;display:grid;gap:14px;background:var(--bg);min-width:0}
@@ -841,8 +843,9 @@ const ST={
   CB:{label:'Interested but Busy – Call Back Later',hex:'#2F66D0'},
   NI:{label:'Not Interested',hex:'#D9534F'},
   FU:{label:'Follow-Up Required',hex:'#7B4FD6'},
+  SKIPPED:{label:'Skipped Lead',hex:'#64748B'},
 };
-const SHORT={NC:'Not Called',NR:'Not Received',NRCH:'Not Reachable',INT:'Interested',CB:'Call Back Later',NI:'Not Interested',FU:'Follow-Up'};
+const SHORT={NC:'Not Called',NR:'Not Received',NRCH:'Not Reachable',INT:'Interested',CB:'Call Back Later',NI:'Not Interested',FU:'Follow-Up',SKIPPED:'Skipped'};
 const pill=(s,short=true)=>`<span class="pill s-${s}">${short?SHORT[s]:ST[s].label}</span>`;
 const RECEIVED=['INT','CB','NI','FU'];
 const DAY=864e5;
@@ -1012,6 +1015,8 @@ function wipeAllLeadsToZero(){
   if(confirm('Are you sure you want to delete ALL leads and start 100% fresh with 0 leads?')){
     LEADS = [];
     RECORDINGS = [];
+    if(typeof SKIPPED_LEADS !== 'undefined'){ SKIPPED_LEADS.clear(); saveSkippedLeads(); }
+    if(typeof SKIPPED_LOGS !== 'undefined'){ SKIPPED_LOGS = []; saveSkippedLogs(); }
     saveStorage();
     saveRecordingsToStorage();
     toast('All data deleted! CRM is 100% clean with 0 leads.');
@@ -1028,6 +1033,8 @@ function resetActivityMetrics(){
       l.convertedAt=null;
     });
     RECORDINGS = [];
+    if(typeof SKIPPED_LEADS !== 'undefined'){ SKIPPED_LEADS.clear(); saveSkippedLeads(); }
+    if(typeof SKIPPED_LOGS !== 'undefined'){ SKIPPED_LOGS = []; saveSkippedLogs(); }
     saveStorage();
     saveRecordingsToStorage();
     toast('All metrics reset to 0. All desks are fresh with 0 calls logged.');
@@ -1052,6 +1059,7 @@ function stats(c,from,to){
   const intLeads=new Set(es.filter(e=>e.status==='INT').map(e=>e.id));
   const days=Math.max(1,Math.round((Math.min(to,Date.now())-from)/DAY)||1);
   const conv=mine.filter(l=>l.convertedAt&&l.convertedAt>=from&&l.convertedAt<to).length;
+  const skippedCount = (typeof SKIPPED_LOGS !== 'undefined' ? SKIPPED_LOGS : []).filter(s => s.caller === c && s.time >= from && s.time < to).length;
   return {
     assigned:mine.length, calls:es.length, unique:uniq.size,
     received:es.filter(e=>RECEIVED.includes(e.status)).length,
@@ -1059,8 +1067,10 @@ function stats(c,from,to){
     interested:intLeads.size, callbacks:es.filter(e=>e.status==='CB').length,
     pending:mine.filter(pendingFU).length, due:mine.filter(isDue).length,
     notInterested:es.filter(e=>e.status==='NI').length,
-    converted:conv, remaining:mine.filter(l=>l.status==='NC').length,
+    converted:conv,
+    remaining:mine.filter(l=>l.status==='NC' && !(typeof SKIPPED_LEADS !== 'undefined' && SKIPPED_LEADS.has(l.id))).length,
     done:mine.filter(l=>l.status!=='NC').length,
+    skipped:skippedCount,
     avg:+(es.length/days).toFixed(1), rate:uniq.size?Math.round(intLeads.size/uniq.size*100):0,
   };
 }
@@ -1519,12 +1529,12 @@ function phoneScreen(c){
     <div class="p-body">
       <div class="ring-card">
         <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="${R2}" fill="none" stroke="#E8EEF6" stroke-width="8"/><circle cx="42" cy="42" r="${R2}" fill="none" stroke="${C.hex}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${circ*pct/100} ${circ}" transform="rotate(-90 42 42)"/><text x="42" y="48" text-anchor="middle" font-size="18" font-weight="600" fill="#10305F" font-family="Outfit, sans-serif">${pct}%</text></svg>
-        <div class="t"><span>Data completed</span><b class="num">${s.done} of ${s.assigned} leads</b><span class="num">${s.remaining} left to call</span></div>
+        <div class="t"><span>Data completed</span><b class="num">${s.done} of ${s.assigned} leads</b><span class="num">${s.remaining} left · <b style="color:#64748B">${s.skipped} skipped</b></span></div>
       </div>
       <div class="p-cap" style="padding:2px 2px 0"><span>Today</span><span class="num">${s.rate}% conversion</span></div>
       <div class="p-tiles">
         ${tile(s.calls,'Calls made')}${tile(s.received,'Picked up','#127534')}${tile(s.notReceived,'Not picked','#AE4718')}
-        ${tile(s.interested,'Interested','#127534')}${tile(s.notInterested,'Not interested','#B3261E')}${tile(s.pending,'Follow-ups','#1E57B0')}
+        ${tile(s.interested,'Interested','#127534')}${tile(s.pending,'Follow-ups','#1E57B0')}${tile(s.skipped,'Skipped','#64748B')}
       </div>
       <div class="p-card"><div class="p-cap"><span>${cls==='st-call'?'On call now':'Last call'}</span><span>${a?ago(a.t):''}</span></div>
         ${a?`<div class="p-row"><div class="who"><b>${esc(a.lead.company)}</b><span>${esc(a.lead.name)}</span></div>${pill(a.status)}</div>`:'<span class="faint" style="font-size:12px">No calls yet today</span>'}</div>
@@ -1543,7 +1553,8 @@ function aDispatch(m){
     c,
     name: CALLERS[c].name,
     total: LEADS.filter(l=>l.caller===c).length,
-    uncalled: LEADS.filter(l=>l.caller===c && l.status==='NC').length,
+    uncalled: LEADS.filter(l=>l.caller===c && l.status==='NC' && !(typeof SKIPPED_LEADS !== 'undefined' && SKIPPED_LEADS.has(l.id))).length,
+    skipped: (typeof SKIPPED_LOGS !== 'undefined' ? SKIPPED_LOGS : []).filter(s=>s.caller===c).length,
     callsToday: LEADS.filter(l=>l.history.some(e=>e.by===c && e.t>=todayRange()[0])).length
   }));
   
@@ -1646,7 +1657,7 @@ function aDispatch(m){
         ${av(s.c)}
         <div>
           <b>${s.total}</b>
-          <div class="faint" style="font-size:12px">${s.name} · ${s.uncalled} fresh to call (${s.callsToday} called today)</div>
+          <div class="faint" style="font-size:12px">${s.name} · ${s.uncalled} fresh · ${s.skipped} skipped (${s.callsToday} called)</div>
         </div>
       </div>`).join('')}
     </div>
@@ -1727,7 +1738,7 @@ function aDispatch(m){
 
 function aLive(m){
   const t=todayRange();
-  const tot={calls:0,unique:0,received:0,notReceived:0,interested:0,pending:0,notInterested:0,converted:0,remaining:0};
+  const tot={calls:0,unique:0,received:0,notReceived:0,interested:0,pending:0,notInterested:0,converted:0,remaining:0,skipped:0};
   'ABC'.split('').forEach(c=>{const s=stats(c,...t);for(const k in tot)tot[k]+=s[k]});
   const kp=(l,v,sub,col)=>`<div class="kpi"><span class="lbl">${col?`<i style="background:${col}"></i>`:''}${l}</span><span class="val">${v}</span>${sub?`<span class="sub">${sub}</span>`:''}</div>`;
   const feed=allEntries().slice(0,18);
@@ -1743,7 +1754,7 @@ function aLive(m){
       ${bk('phone','var(--navy-soft)','var(--ink)',tot.calls,'Calls made today',`${tot.unique} different leads contacted`)}
       ${bk('target','var(--green-soft)','var(--green-600)',tot.interested,'Interested clients',`${tot.converted} converted today`)}
       ${bk('bell','#E5EFFD','#1E57B0',tot.pending,'Follow-ups pending',`${LEADS.filter(isDue).length} due right now`)}
-      ${bk('list','#EEF2F7','#5A6B85',tot.remaining,'Leads not called yet',`out of ${LEADS.filter(l=>l.caller).length} assigned`)}
+      ${bk('list','#EEF2F7','#5A6B85',tot.remaining,'Leads not called yet',`${tot.skipped} skipped across callers`)}
     </div>
     <div class="panel">
       <div class="panel-h"><h3>Result of today's ${outTotal} calls</h3></div>
@@ -2045,10 +2056,10 @@ function aReports(m){
   <section class="panel">
     <div class="panel-h"><h3>Team comparison</h3><span class="faint" style="font-size:12.5px">Conv. rate = interested ÷ unique leads contacted</span></div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Team Member</th><th class="r">Assigned</th><th class="r">Calls made</th><th class="r">Unique contacted</th><th class="r">Received</th><th class="r">Not received</th><th class="r">Interested</th><th class="r">Callbacks</th><th class="r">Pending F/U</th><th class="r">Not interested</th><th class="r">Converted</th><th class="r">Remaining</th><th class="r">Avg calls/day</th><th class="r">Conv. rate</th></tr></thead>
+      <thead><tr><th>Team Member</th><th class="r">Assigned</th><th class="r">Calls made</th><th class="r">Unique contacted</th><th class="r">Received</th><th class="r">Not received</th><th class="r">Interested</th><th class="r">Callbacks</th><th class="r">Pending F/U</th><th class="r">Not interested</th><th class="r">Converted</th><th class="r">Remaining</th><th class="r">Skipped</th><th class="r">Avg calls/day</th><th class="r">Conv. rate</th></tr></thead>
       <tbody>${rows.map(r=>`<tr class="${r.c===best&&rows.length>1?'top-row':''}"><td><span style="display:inline-flex;align-items:center;gap:8px">${av(r.c,'')}<b>${CALLERS[r.c].name}</b>${r.c===best&&rows.length>1?'<span class="pill s-INT">Top</span>':''}</span></td>
-        ${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining','avg'].map(k=>`<td class="r">${r[k]}</td>`).join('')}<td class="r"><b>${r.rate}%</b></td></tr>`).join('')}
-      ${rows.length>1?`<tr><td><b>Team total</b></td>${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining'].map(k=>`<td class="r"><b>${sum(k)}</b></td>`).join('')}<td class="r"><b>${(sum('avg')).toFixed(1)}</b></td><td class="r"><b>${sum('unique')?Math.round(sum('interested')/sum('unique')*100):0}%</b></td></tr>`:''}
+        ${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining','skipped','avg'].map(k=>`<td class="r">${k==='skipped'?`<b style="color:#64748B">${r[k]}</b>`:r[k]}</td>`).join('')}<td class="r"><b>${r.rate}%</b></td></tr>`).join('')}
+      ${rows.length>1?`<tr><td><b>Team total</b></td>${['assigned','calls','unique','received','notReceived','interested','callbacks','pending','notInterested','converted','remaining','skipped'].map(k=>`<td class="r"><b>${sum(k)}</b></td>`).join('')}<td class="r"><b>${(sum('avg')).toFixed(1)}</b></td><td class="r"><b>${sum('unique')?Math.round(sum('interested')/sum('unique')*100):0}%</b></td></tr>`:''}
       </tbody></table></div>
   </section>`;
   m.querySelector('#rc').value=S.rep.caller;
@@ -2559,13 +2570,14 @@ function aTimers(m){
         <div style="background:var(--surface);padding:14px;border-radius:12px;margin-bottom:14px">
           <div style="display:flex;justify-content:space-between;align-items:baseline">
             <span class="faint" style="font-size:11.5px;font-weight:600;text-transform:uppercase">Today's Total Active Work</span>
-            <span class="num" style="font-size:11.5px;color:var(--ink-2)">${callsToday} calls made</span>
+            <span class="num" style="font-size:11.5px;color:var(--ink-2)">${callsToday} calls · <b style="color:#64748B">${SKIPPED_LOGS.filter(s=>s.caller===c&&s.time>=todayRange()[0]).length} skipped</b></span>
           </div>
           <div id="adm-today-${c}" style="font-size:26px;font-weight:800;color:var(--green-600);margin-top:2px">
             ${formatDurationHuman(todayActiveSec)}
           </div>
-          <div style="font-size:12px;color:var(--ink-2);margin-top:2px">
-            Break time today: <b>${formatDurationHuman(todayBreakSec)}</b>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-2);margin-top:2px">
+            <span>Break time today: <b>${formatDurationHuman(todayBreakSec)}</b></span>
+            <span style="color:#64748B">Skipped leads: <b style="color:var(--ink)">${SKIPPED_LOGS.filter(s=>s.caller===c&&s.time>=todayRange()[0]).length}</b></span>
           </div>
         </div>
 
@@ -2648,9 +2660,78 @@ function aTimers(m){
       </table>
     </div>
   </section>
+
+  <!-- Skipped Leads Audit Log -->
+  <section class="panel" style="margin-top:20px">
+    <div class="panel-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <h3>Skipped Leads Audit Log</h3>
+        <span class="faint">Real-time audit log of every lead skipped by Jumana Malekul, Sameena Rubab, and Sumaiya Manha.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:12.5px;font-weight:600;color:var(--ink-2)">Filter Caller:</label>
+        <select id="skip-filter-caller" style="padding:6px 10px;font-size:13px;border-radius:8px;border:1px solid var(--line)">
+          <option value="all" ${(!S.skipFilter||S.skipFilter==='all')?'selected':''}>All Callers (${SKIPPED_LOGS.length} skipped)</option>
+          <option value="A" ${S.skipFilter==='A'?'selected':''}>Jumana Malekul (${SKIPPED_LOGS.filter(s=>s.caller==='A').length})</option>
+          <option value="B" ${S.skipFilter==='B'?'selected':''}>Sameena Rubab (${SKIPPED_LOGS.filter(s=>s.caller==='B').length})</option>
+          <option value="C" ${S.skipFilter==='C'?'selected':''}>Sumaiya Manha (${SKIPPED_LOGS.filter(s=>s.caller==='C').length})</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Caller Name</th>
+            <th>Company / Studio</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Lead #</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(() => {
+            const fLogs = (!S.skipFilter || S.skipFilter === 'all')
+              ? SKIPPED_LOGS
+              : SKIPPED_LOGS.filter(s => s.caller === S.skipFilter);
+            return fLogs.length ? fLogs.map(s => `
+              <tr>
+                <td><span class="num">${fmtDT(s.time)}</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <span class="avatar sm" style="background:${CALLERS[s.caller]?.soft||'#EEE'};color:${CALLERS[s.caller]?.color||'#333'}">${CALLERS[s.caller]?.initial||s.caller}</span>
+                    <b>${CALLERS[s.caller]?.name || s.callerName}</b>
+                  </div>
+                </td>
+                <td><b>${esc(s.company)}</b>${s.name ? `<span class="faint" style="display:block;font-size:11.5px">${esc(s.name)}</span>` : ''}</td>
+                <td><span class="num">${phoneFmt(s.phone)}</span></td>
+                <td><span>${esc(s.city || '—')}</span></td>
+                <td><span class="badge" style="background:#F1F5F9;color:var(--ink)">#${s.leadId}</span></td>
+                <td><span class="badge" style="background:#F1F5F9;color:#64748B;font-weight:600">Skipped from queue</span></td>
+              </tr>
+            `).join('') : `
+              <tr>
+                <td colspan="7" style="text-align:center;padding:32px 16px;color:var(--ink-3)">
+                  No skipped leads recorded yet. When a caller clicks <b>Skip</b> on any lead, it will immediately appear here with caller name, timestamp, and client details.
+                </td>
+              </tr>
+            `;
+          })()}
+        </tbody>
+      </table>
+    </div>
+  </section>
   `;
 
   const sel = m.querySelector('#timer-filter-caller');
+  const skipSel = m.querySelector('#skip-filter-caller');
+  if(skipSel) skipSel.onchange = (e) => {
+    S.skipFilter = e.target.value;
+    aTimers(m);
+  };
   if(sel) sel.onchange = (e) => {
     S.timerFilter = e.target.value;
     aTimers(m);
@@ -2662,15 +2743,26 @@ function aTimers(m){
 
 /* ======================= Skipped Leads Persistence ======================= */
 const SKIPPED_STORAGE_KEY = 'vgds_crm_skipped_leads_v1';
+const SKIPPED_LOGS_KEY = 'vgds_crm_skipped_logs_v1';
 let SKIPPED_LEADS = new Set();
+let SKIPPED_LOGS = [];
 try {
   const raw = localStorage.getItem(SKIPPED_STORAGE_KEY);
   if(raw) SKIPPED_LEADS = new Set(JSON.parse(raw));
+} catch(e){}
+try {
+  const rawLogs = localStorage.getItem(SKIPPED_LOGS_KEY);
+  if(rawLogs) SKIPPED_LOGS = JSON.parse(rawLogs);
 } catch(e){}
 
 function saveSkippedLeads(){
   try {
     localStorage.setItem(SKIPPED_STORAGE_KEY, JSON.stringify([...SKIPPED_LEADS]));
+  } catch(e){}
+}
+function saveSkippedLogs(){
+  try {
+    localStorage.setItem(SKIPPED_LOGS_KEY, JSON.stringify(SKIPPED_LOGS));
   } catch(e){}
 }
 
@@ -3022,7 +3114,32 @@ function cDesk(m){
   m.querySelector('#next').onclick = () => {
     SKIPPED_LEADS.add(L.id);
     saveSkippedLeads();
-    toast(`Skipped: ${L.company}. This lead will not repeat.`);
+
+    const callerKey = S.role;
+    const skipRec = {
+      id: 'skip_' + Date.now() + '_' + L.id,
+      caller: callerKey,
+      callerName: CALLERS[callerKey]?.name || callerKey,
+      leadId: L.id,
+      company: L.company || '',
+      name: L.name || '',
+      phone: L.phone || '',
+      city: L.city || '',
+      time: Date.now()
+    };
+    SKIPPED_LOGS.unshift(skipRec);
+    saveSkippedLogs();
+
+    if(!L.history) L.history = [];
+    L.history.push({
+      t: Date.now(),
+      by: callerKey,
+      status: 'SKIPPED',
+      remark: 'Skipped lead from active queue'
+    });
+    saveStorage();
+
+    toast(`Skipped: ${L.company}. Recorded in Admin Audit Log.`);
     S.desk = { queueIdx: 0, viewLeadId: null, status: null, remark: '', fu: '', conv: false, recording: null };
     cDesk(m);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3210,7 +3327,7 @@ function cPerf(m){
   <section class="kpis">
     ${kp('Calls today',t.calls,`${t.unique} unique leads`)}${kp('Received',t.received,`${t.notReceived} not received`)}
     ${kp('Interested',t.interested,`${t.rate}% conversion`)}${kp('Pending follow-ups',t.pending,`${t.due} due now`)}
-    ${kp('Not interested',t.notInterested,'')}${kp('Left to call',t.remaining,`of ${t.assigned} assigned`)}
+    ${kp('Not interested',t.notInterested,'')}${kp('Left to call',t.remaining,`${t.skipped} skipped · ${t.assigned} assigned`)}
   </section>
   <section class="grid-2">
     <div class="panel"><div class="panel-h"><h3>Calls, last 7 days</h3><span class="faint num">avg ${w.avg}/day</span></div>
