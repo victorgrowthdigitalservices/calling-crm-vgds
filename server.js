@@ -74,6 +74,46 @@ app.post('/api/recordings/upload', upload.single('recording'), (req, res) => {
 });
 
 // -------------------------------------------------------------
+
+// -------------------------------------------------------------
+// Universal State Synchronization for Multi-Device Telecalling CRM
+// -------------------------------------------------------------
+const CRM_STATE_FILE = path.join(__dirname, 'crm_state.json');
+
+app.get('/api/sync/state', (req, res) => {
+  try {
+    if (fs.existsSync(CRM_STATE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CRM_STATE_FILE, 'utf8'));
+      return res.json({ success: true, ...data });
+    }
+    return res.json({ success: true, empty: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read sync state: ' + err.message });
+  }
+});
+
+app.post('/api/sync/state', (req, res) => {
+  try {
+    const { leads, recordings, shifts, skippedLogs, skippedLeads } = req.body;
+    let current = {};
+    if (fs.existsSync(CRM_STATE_FILE)) {
+      try { current = JSON.parse(fs.readFileSync(CRM_STATE_FILE, 'utf8')); } catch(e){}
+    }
+    const updated = {
+      leads: leads || current.leads || [],
+      recordings: recordings || current.recordings || [],
+      shifts: shifts || current.shifts || {},
+      skippedLogs: skippedLogs || current.skippedLogs || [],
+      skippedLeads: skippedLeads || current.skippedLeads || [],
+      updatedAt: Date.now()
+    };
+    fs.writeFileSync(CRM_STATE_FILE, JSON.stringify(updated, null, 2), 'utf8');
+    res.json({ success: true, updatedAt: updated.updatedAt });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save sync state: ' + err.message });
+  }
+});
+
 // 1. AUTH ROUTES & PORTAL PASSCODES
 // -------------------------------------------------------------
 app.post('/api/auth/portal-login', (req, res) => {
@@ -261,7 +301,7 @@ app.post('/api/leads/upload', authMiddleware, adminOnly, upload.single('file'), 
         imported: insertedCount,
         duplicates_skipped: duplicateCount,
         invalid_rows: invalidCount,
-        allocated_to: assignedCaller ? assignedCaller.name : 'Distributed Equally (Prachi, Renu, Aarush)',
+        allocated_to: assignedCaller ? assignedCaller.name : 'Distributed Equally (Jumana, Sameena, Sumaiya)',
         sample_duplicates: skippedDuplicates
       }
     });

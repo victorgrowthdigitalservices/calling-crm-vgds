@@ -920,6 +920,8 @@ function saveStorage(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
     localStorage.setItem('vgds_crm_seq_v200', String(SEQ));
+    broadcastSync('leads_saved');
+    pushStateToServer();
   }catch(e){}
 }
 function loadStorage(){
@@ -964,6 +966,8 @@ async function saveRecordingsToStorage(){
       return r;
     });
     localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(light));
+    broadcastSync('recordings_saved');
+    pushStateToServer();
   }catch(e){}
 
   // Persist complete recordings with full audio data in IndexedDB
@@ -2317,6 +2321,8 @@ function loadShiftsFromStorage(){
 function saveShiftsToStorage(){
   try{
     localStorage.setItem(SHIFT_STORAGE_KEY, JSON.stringify(SHIFTS));
+    broadcastSync('shifts_saved');
+    pushStateToServer();
   }catch(e){}
 }
 loadShiftsFromStorage();
@@ -2926,11 +2932,15 @@ try {
 function saveSkippedLeads(){
   try {
     localStorage.setItem(SKIPPED_STORAGE_KEY, JSON.stringify([...SKIPPED_LEADS]));
+    broadcastSync('skipped_saved');
+    pushStateToServer();
   } catch(e){}
 }
 function saveSkippedLogs(){
   try {
     localStorage.setItem(SKIPPED_LOGS_KEY, JSON.stringify(SKIPPED_LOGS));
+    broadcastSync('skipped_saved');
+    pushStateToServer();
   } catch(e){}
 }
 
@@ -3601,6 +3611,116 @@ setInterval(() => {
 }, 1000);
 
 render();
+
+/* ======================= Real-time Cross-Tab & Multi-Device Sync ======================= */
+const CRM_SYNC_CHANNEL = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('vgds_crm_realtime_sync') : null;
+
+function broadcastSync(action, payload = {}) {
+  try {
+    if (CRM_SYNC_CHANNEL) {
+      CRM_SYNC_CHANNEL.postMessage({ action, payload, role: S.role, time: Date.now() });
+    }
+  } catch (e) {}
+}
+
+let lastServerSyncTime = 0;
+async function pushStateToServer() {
+  try {
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    const body = JSON.stringify({
+      leads: LEADS,
+      recordings: RECORDINGS.map(r => ({ ...r, url: r.serverUrl || r.url })),
+      shifts: SHIFTS,
+      skippedLogs: SKIPPED_LOGS,
+      skippedLeads: [...SKIPPED_LEADS]
+    });
+    const res = await fetch('/api/sync/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    if (res.ok) {
+      const d = await res.json();
+      if (d.updatedAt) lastServerSyncTime = d.updatedAt;
+    }
+  } catch (e) {}
+}
+
+async function pullStateFromServer() {
+  try {
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    const res = await fetch('/api/sync/state');
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d && d.updatedAt && d.updatedAt > lastServerSyncTime) {
+      lastServerSyncTime = d.updatedAt;
+      let hasChanges = false;
+      if (Array.isArray(d.leads) && d.leads.length > 0) {
+        LEADS = d.leads;
+        saveStorage();
+        hasChanges = true;
+      }
+      if (Array.isArray(d.recordings)) {
+        RECORDINGS = d.recordings;
+        saveRecordingsToStorage();
+        hasChanges = true;
+      }
+      if (d.shifts && typeof d.shifts === 'object') {
+        SHIFTS = d.shifts;
+        saveShifts();
+        hasChanges = true;
+      }
+      if (Array.isArray(d.skippedLogs)) {
+        SKIPPED_LOGS = d.skippedLogs;
+        saveSkippedLogs();
+        hasChanges = true;
+      }
+      if (Array.isArray(d.skippedLeads)) {
+        SKIPPED_LEADS = new Set(d.skippedLeads);
+        saveSkippedLeads();
+        hasChanges = true;
+      }
+      if (hasChanges && S.role) {
+        renderTab();
+      }
+    }
+  } catch (e) {}
+}
+
+// Background sync loop (every 3 seconds for Admin, every 5 seconds for Callers)
+setInterval(() => {
+  if (S.role === 'admin') {
+    pullStateFromServer();
+  }
+}, 3000);
+
+// Cross-tab real-time listener (instant 0ms update across tabs)
+if (CRM_SYNC_CHANNEL) {
+  CRM_SYNC_CHANNEL.onmessage = (ev) => {
+    loadStorage();
+    loadRecordingsFromStorage();
+    loadShifts();
+    loadSkippedLeads();
+    loadSkippedLogs();
+    if (S.role) {
+      renderTab();
+    }
+  };
+}
+
+window.addEventListener('storage', (ev) => {
+  if (ev.key === STORAGE_KEY || ev.key === REC_STORAGE_KEY || ev.key === SHIFT_STORAGE_KEY || ev.key === SKIPPED_STORAGE_KEY || ev.key === SKIPPED_LOGS_KEY) {
+    loadStorage();
+    loadRecordingsFromStorage();
+    loadShifts();
+    loadSkippedLeads();
+    loadSkippedLogs();
+    if (S.role) {
+      renderTab();
+    }
+  }
+});
+
 </script>
 
 </body>

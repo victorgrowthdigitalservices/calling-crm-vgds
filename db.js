@@ -96,11 +96,11 @@ function initDB() {
     `);
 
     insertUser.run('admin', '1313', 'Victor Growth Admin', 'admin');
-    insertUser.run('caller_a', '0000', 'Caller A', 'caller');
-    insertUser.run('caller_b', '0000', 'Caller B', 'caller');
-    insertUser.run('caller_c', '0000', 'Caller C', 'caller');
+    insertUser.run('caller_a', '0000', 'Jumana Malekul', 'caller');
+    insertUser.run('caller_b', '0000', 'Sameena Rubab', 'caller');
+    insertUser.run('caller_c', '0000', 'Sumaiya Manha', 'caller');
 
-    console.log('✅ Seeded default users: Admin (1313), Caller A (0000), Caller B (0000), Caller C (0000)');
+    console.log('✅ Seeded default users: Admin (1313), Jumana Malekul (0000), Sameena Rubab (0000), Sumaiya Manha (0000)');
   }
 }
 
