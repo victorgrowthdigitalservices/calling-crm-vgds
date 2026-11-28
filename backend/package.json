@@ -1,11 +1,15 @@
 {
   "name": "calling-crm-backend",
   "version": "1.0.0",
-  "description": "Production Calling CRM Backend for Calling Team (Admin + Prachi, Renu, Aarush)",
+  "description": "Production Calling CRM Backend for Calling Team (Admin + Jumana, Sameena, Sumaiya)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "echo 'Build complete'",
     "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -1,4 +1,4 @@
-require('dotenv').config();
+try { require('dotenv').config(); } catch(e) {}
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -782,15 +782,27 @@ app.get('/api/admin/export/leads', authMiddleware, adminOnly, (req, res) => {
   }
 });
 
-// Serve frontend static files if folder exists
+// Serve frontend static files robustly from public/ or root directory
 const publicPath = path.join(__dirname, 'public');
-if (fs.existsSync(publicPath)) {
+const hasPublic = fs.existsSync(publicPath) && fs.existsSync(path.join(publicPath, 'index.html'));
+const rootIndex = path.join(__dirname, 'index.html');
+const hasRootIndex = fs.existsSync(rootIndex);
+
+if (hasPublic) {
   app.use(express.static(publicPath));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(publicPath, 'index.html'));
-  });
 }
+app.use(express.static(__dirname));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+  if (hasPublic) {
+    return res.sendFile(path.join(publicPath, 'index.html'));
+  }
+  if (hasRootIndex) {
+    return res.sendFile(rootIndex);
+  }
+  res.status(404).send('index.html not found. Ensure index.html or public/index.html is present.');
+});
 
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
