@@ -121,8 +121,7 @@ app.post('/api/auth/portal-login', (req, res) => {
   const usernameMap = {
     'admin': 'admin',
     'a': 'caller_a',
-    'b': 'caller_b',
-    'c': 'caller_c'
+    'b': 'caller_b'
   };
   const targetUsername = usernameMap[portal ? portal.toLowerCase() : ''];
   if (!targetUsername) {
@@ -210,7 +209,6 @@ app.post('/api/leads/upload', authMiddleware, adminOnly, upload.single('file'), 
       callerMap[c.username.toLowerCase()] = c;
       if (c.username === 'caller_a') callerMap['a'] = c;
       if (c.username === 'caller_b') callerMap['b'] = c;
-      if (c.username === 'caller_c') callerMap['c'] = c;
     });
 
     let assignedCaller = null;
@@ -301,7 +299,7 @@ app.post('/api/leads/upload', authMiddleware, adminOnly, upload.single('file'), 
         imported: insertedCount,
         duplicates_skipped: duplicateCount,
         invalid_rows: invalidCount,
-        allocated_to: assignedCaller ? assignedCaller.name : 'Distributed Equally (Jumana, Sameena, Sumaiya)',
+        allocated_to: assignedCaller ? assignedCaller.name : 'Distributed Equally (Jumana, Sameena)',
         sample_duplicates: skippedDuplicates
       }
     });

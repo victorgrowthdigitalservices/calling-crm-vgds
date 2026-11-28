@@ -32,8 +32,7 @@ try {
     users: [
       { id: 1, username: 'admin', name: 'Admin Master', role: 'admin', password: '1313', last_active: null },
       { id: 2, username: 'caller_a', name: 'Jumana Malekul', role: 'caller', password: '4132', last_active: null },
-      { id: 3, username: 'caller_b', name: 'Sameena Rubab', role: 'caller', password: '2310', last_active: null },
-      { id: 4, username: 'caller_c', name: 'Sumaiya Manha', role: 'caller', password: '0786', last_active: null }
+      { id: 3, username: 'caller_b', name: 'Sameena Rubab', role: 'caller', password: '2310', last_active: null }
     ],
     leads: [],
     call_logs: []
@@ -177,7 +176,6 @@ function initDB() {
       insertUser.run('admin', '1313', 'Achhar Sharma (Admin)', 'admin');
       insertUser.run('caller_a', '4132', 'Jumana Malekul', 'caller');
       insertUser.run('caller_b', '2310', 'Sameena Rubab', 'caller');
-      insertUser.run('caller_c', '0786', 'Sumaiya Manha', 'caller');
     }
   } catch (err) {
     console.warn('DB initialization error (non-fatal):', err.message);
