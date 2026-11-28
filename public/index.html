@@ -933,12 +933,16 @@ function makeLead(caller){
 const STORAGE_KEY = 'vgds_crm_sheet_leads_v300';
 const REC_STORAGE_KEY = 'vgds_crm_sheet_recordings_v200';
 
+let isSyncingFromServer = false;
+
 function saveStorage(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS));
     localStorage.setItem('vgds_crm_seq_v200', String(SEQ));
     broadcastSync('leads_saved');
-    pushStateToServer();
+    if(!isSyncingFromServer){
+      pushStateToServer();
+    }
   }catch(e){}
 }
 function loadStorage(){
@@ -2504,9 +2508,12 @@ function saveShiftsToStorage(){
   try{
     localStorage.setItem(SHIFT_STORAGE_KEY, JSON.stringify(SHIFTS));
     broadcastSync('shifts_saved');
-    pushStateToServer();
+    if(!isSyncingFromServer){
+      pushStateToServer();
+    }
   }catch(e){}
 }
+function saveShifts(){ saveShiftsToStorage(); }
 loadShiftsFromStorage();
 
 function pad2(n){ return String(Math.floor(n)).padStart(2, '0'); }
@@ -2573,6 +2580,18 @@ function getCallerTodayTotalBreakSec(callerKey){
   return sum;
 }
 
+
+function syncShiftStateFast(callerKey){
+  try {
+    const sh = SHIFTS[callerKey];
+    fetch('/api/sync/shift', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caller: callerKey, shift: sh })
+    }).catch(()=>{});
+  } catch(e) {}
+}
+
 function startCallerShift(callerKey){
   const sh = SHIFTS[callerKey];
   if(sh.status === 'running') return;
@@ -2581,6 +2600,7 @@ function startCallerShift(callerKey){
   if(!sh.currentShiftStart) sh.currentShiftStart = now;
   sh.lastResumeTime = now;
   saveShiftsToStorage();
+  syncShiftStateFast(callerKey);
   toast(`Calling Shift started for ${CALLERS[callerKey].name}! Work timer is now running.`);
   render();
 }
@@ -2595,6 +2615,7 @@ function pauseCallerShiftBreak(callerKey){
   sh.status = 'break';
   sh.lastBreakStart = now;
   saveShiftsToStorage();
+  syncShiftStateFast(callerKey);
   toast(`Break started. Work timer paused. Enjoy your break!`);
   render();
 }
@@ -2609,6 +2630,7 @@ function resumeCallerShift(callerKey){
   sh.status = 'running';
   sh.lastResumeTime = now;
   saveShiftsToStorage();
+  syncShiftStateFast(callerKey);
   toast(`Break ended. Welcome back! Work timer resumed.`);
   render();
 }
@@ -3601,22 +3623,62 @@ function cDesk(m){
   }
 
   // Save Outcome
-  m.querySelector('#save').onclick = () => {
+  m.querySelector('#save').onclick = async () => {
     if(!D.status) return;
+    const btnSave = m.querySelector('#save');
+    if(btnSave) {
+      btnSave.disabled = true;
+      btnSave.innerHTML = `<span class="live-pulse-dot" style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block"></span> Saving & Syncing...`;
+    }
+
+    // Ensure audio recording is uploaded to server if attached
+    if(cRecFile && cRecFile.files && cRecFile.files[0] && (!D.recording || !D.recording.serverUrl)){
+      try {
+        const file = cRecFile.files[0];
+        const fd = new FormData();
+        fd.append('recording', file);
+        const upRes = await fetch('/api/recordings/upload', { method: 'POST', body: fd });
+        const upData = await upRes.json();
+        if(upData && upData.url){
+          D.recording = {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            serverUrl: upData.url,
+            url: upData.url,
+            uploadedAt: Date.now()
+          };
+        }
+      } catch(err) {
+        console.warn('Audio upload background fallback', err);
+      }
+    }
+
     const e = { t: Date.now(), by: S.role, status: D.status, remark: D.remark.trim() };
     const isFU = D.status === 'CB' || D.status === 'FU';
 
     if(isFU){
       const t = new Date(D.fu).getTime();
-      if(!t){ toast('Pick a callback date and time first.'); return; }
+      if(!t){ 
+        if(btnSave){ btnSave.disabled = false; btnSave.innerHTML = `${ic('check',16)} Save Call Outcome & Next Lead ${ic('arrow',16)}`; }
+        toast('Pick a callback date and time first.'); 
+        return; 
+      }
       e.fu = t;
       L.followUp = t;
     } else {
       L.followUp = null;
     }
 
+    const recPayload = D.recording ? {
+      name: D.recording.name || 'call-recording.mp3',
+      size: D.recording.size || 0,
+      serverUrl: D.recording.serverUrl || D.recording.url || '',
+      url: D.recording.serverUrl || D.recording.url || ''
+    } : null;
+
     if(D.recording){
-      e.recording = D.recording;
+      e.recording = recPayload;
       RECORDINGS.unshift({
         id: 'rec-' + Date.now(),
         caller: S.role,
@@ -3628,9 +3690,9 @@ function cDesk(m){
         status: D.status,
         remark: D.remark.trim(),
         date: Date.now(),
-        file: D.recording.name,
-        size: D.recording.size,
-        url: D.recording.serverUrl || D.recording.url
+        file: recPayload.name,
+        size: recPayload.size,
+        url: recPayload.serverUrl || recPayload.url
       });
       saveRecordingsToStorage();
     }
@@ -3639,6 +3701,35 @@ function cDesk(m){
     L.status = D.status;
     if(D.status === 'INT' && D.conv) L.convertedAt = Date.now();
     saveStorage();
+
+    // Dedicated ultra-fast server sync
+    try {
+      fetch('/api/sync/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caller: S.role,
+          leadId: L.id,
+          company: L.company,
+          name: L.name,
+          phone: L.phone,
+          city: L.city,
+          website: L.website || '',
+          status: D.status,
+          remark: D.remark.trim(),
+          fu: isFU ? e.fu : null,
+          conv: D.conv,
+          recording: recPayload
+        })
+      }).then(() => {
+        pushStateToServer();
+      }).catch(() => {
+        pushStateToServer();
+      });
+    } catch(err) {
+      pushStateToServer();
+    }
+
     D.recording = null;
 
     if(isFU){
@@ -3647,7 +3738,7 @@ function cDesk(m){
       toast(`Saved: ${L.company} → ${SHORT[D.status]}`);
     }
 
-    // Reset desk state for next uncalled lead
+    // Reset desk state for next uncalled lead (never calls the same number again)
     S.desk = { queueIdx: 0, viewLeadId: null, status: null, remark: '', fu: '', conv: false, recording: null };
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3804,12 +3895,17 @@ function broadcastSync(action, payload = {}) {
 }
 
 let lastServerSyncTime = 0;
+
 async function pushStateToServer() {
   try {
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    const cleanRecs = RECORDINGS.map(r => ({
+      ...r,
+      url: (r.url && r.url.length > 500 && r.url.startsWith('data:')) ? (r.serverUrl || '') : r.url
+    }));
     const body = JSON.stringify({
       leads: LEADS,
-      recordings: RECORDINGS.map(r => ({ ...r, url: r.serverUrl || r.url })),
+      recordings: cleanRecs,
       shifts: SHIFTS,
       skippedLogs: SKIPPED_LOGS,
       skippedLeads: [...SKIPPED_LEADS]
@@ -3835,44 +3931,61 @@ async function pullStateFromServer() {
     if (d && d.updatedAt && d.updatedAt > lastServerSyncTime) {
       lastServerSyncTime = d.updatedAt;
       let hasChanges = false;
+      isSyncingFromServer = true;
+
       if (Array.isArray(d.leads) && d.leads.length > 0) {
         LEADS = d.leads;
-        saveStorage();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(LEADS)); } catch(e){}
         hasChanges = true;
       }
       if (Array.isArray(d.recordings)) {
         RECORDINGS = d.recordings;
-        saveRecordingsToStorage();
+        try { localStorage.setItem(REC_STORAGE_KEY, JSON.stringify(RECORDINGS)); } catch(e){}
         hasChanges = true;
       }
       if (d.shifts && typeof d.shifts === 'object') {
         SHIFTS = d.shifts;
-        saveShifts();
+        try { localStorage.setItem(SHIFT_STORAGE_KEY, JSON.stringify(SHIFTS)); } catch(e){}
         hasChanges = true;
       }
       if (Array.isArray(d.skippedLogs)) {
         SKIPPED_LOGS = d.skippedLogs;
-        saveSkippedLogs();
+        try { localStorage.setItem(SKIPPED_LOGS_KEY, JSON.stringify(SKIPPED_LOGS)); } catch(e){}
         hasChanges = true;
       }
       if (Array.isArray(d.skippedLeads)) {
         SKIPPED_LEADS = new Set(d.skippedLeads);
-        saveSkippedLeads();
+        try { localStorage.setItem(SKIPPED_STORAGE_KEY, JSON.stringify([...SKIPPED_LEADS])); } catch(e){}
         hasChanges = true;
       }
+
+      isSyncingFromServer = false;
+
       if (hasChanges && S.role) {
-        renderTab();
+        if (S.role === 'admin') {
+          renderTab();
+        } else if (S.tab === 'desk') {
+          const m = document.getElementById('main');
+          if (m) cDesk(m);
+        } else {
+          renderTab();
+        }
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    isSyncingFromServer = false;
+  }
 }
 
-// Background sync loop (every 3 seconds for Admin, every 5 seconds for Callers)
+// Background sync loop for ALL devices (Admin & Callers every 2.5 seconds)
 setInterval(() => {
-  if (S.role === 'admin') {
-    pullStateFromServer();
-  }
-}, 3000);
+  pullStateFromServer();
+}, 2500);
+
+// Immediate startup sync
+pullStateFromServer().then(() => {
+  if (S.role) render();
+});
 
 // Cross-tab real-time listener (instant 0ms update across tabs)
 if (CRM_SYNC_CHANNEL) {

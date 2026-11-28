@@ -12,8 +12,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Upload directory setup
 const uploadDir = path.join(__dirname, 'uploads');
@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } });
 app.use('/uploads', express.static(uploadDir));
 
 // Helper: Authentication Middleware (Simple & rock solid)
@@ -80,10 +80,30 @@ app.post('/api/recordings/upload', upload.single('recording'), (req, res) => {
 // -------------------------------------------------------------
 const CRM_STATE_FILE = path.join(__dirname, 'crm_state.json');
 
+function getSyncState() {
+  if (fs.existsSync(CRM_STATE_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(CRM_STATE_FILE, 'utf8'));
+    } catch(e) {}
+  }
+  return null;
+}
+
+function saveSyncState(data) {
+  data.updatedAt = Date.now();
+  try {
+    fs.writeFileSync(CRM_STATE_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) {
+    console.error('Error writing crm_state.json:', e);
+  }
+  return data;
+}
+
+// Full State Pull
 app.get('/api/sync/state', (req, res) => {
   try {
-    if (fs.existsSync(CRM_STATE_FILE)) {
-      const data = JSON.parse(fs.readFileSync(CRM_STATE_FILE, 'utf8'));
+    const data = getSyncState();
+    if (data) {
       return res.json({ success: true, ...data });
     }
     return res.json({ success: true, empty: true });
@@ -92,25 +112,166 @@ app.get('/api/sync/state', (req, res) => {
   }
 });
 
+// Full State Push & Smart Merge
 app.post('/api/sync/state', (req, res) => {
   try {
     const { leads, recordings, shifts, skippedLogs, skippedLeads } = req.body;
-    let current = {};
-    if (fs.existsSync(CRM_STATE_FILE)) {
-      try { current = JSON.parse(fs.readFileSync(CRM_STATE_FILE, 'utf8')); } catch(e){}
+    let current = getSyncState() || {};
+
+    let mergedLeads = current.leads || [];
+    if (Array.isArray(leads) && leads.length > 0) {
+      if (mergedLeads.length === 0) {
+        mergedLeads = leads;
+      } else {
+        const leadMap = new Map();
+        mergedLeads.forEach(l => leadMap.set(l.id, l));
+        leads.forEach(l => {
+          const exist = leadMap.get(l.id);
+          if (!exist) {
+            leadMap.set(l.id, l);
+          } else {
+            const existHist = (exist.history && exist.history.length) || 0;
+            const newHist = (l.history && l.history.length) || 0;
+            if (newHist >= existHist || (l.status && l.status !== 'NC')) {
+              leadMap.set(l.id, l);
+            }
+          }
+        });
+        mergedLeads = Array.from(leadMap.values());
+      }
     }
-    const updated = {
-      leads: leads || current.leads || [],
-      recordings: recordings || current.recordings || [],
-      shifts: shifts || current.shifts || {},
-      skippedLogs: skippedLogs || current.skippedLogs || [],
-      skippedLeads: skippedLeads || current.skippedLeads || [],
-      updatedAt: Date.now()
-    };
-    fs.writeFileSync(CRM_STATE_FILE, JSON.stringify(updated, null, 2), 'utf8');
+
+    let mergedRecs = current.recordings || [];
+    if (Array.isArray(recordings) && recordings.length > 0) {
+      const recMap = new Map();
+      mergedRecs.forEach(r => recMap.set(r.id, r));
+      recordings.forEach(r => recMap.set(r.id, r));
+      mergedRecs = Array.from(recMap.values());
+    }
+
+    let mergedShifts = current.shifts || {};
+    if (shifts && typeof shifts === 'object') {
+      Object.keys(shifts).forEach(k => {
+        mergedShifts[k] = { ...(mergedShifts[k] || {}), ...shifts[k] };
+      });
+    }
+
+    let mergedSkipLogs = current.skippedLogs || [];
+    if (Array.isArray(skippedLogs) && skippedLogs.length > 0) {
+      const skipMap = new Map();
+      mergedSkipLogs.forEach(s => skipMap.set(s.id || s.leadId, s));
+      skippedLogs.forEach(s => skipMap.set(s.id || s.leadId, s));
+      mergedSkipLogs = Array.from(skipMap.values());
+    }
+
+    let mergedSkipLeads = current.skippedLeads || [];
+    if (Array.isArray(skippedLeads)) {
+      mergedSkipLeads = Array.from(new Set([...mergedSkipLeads, ...skippedLeads]));
+    }
+
+    const updated = saveSyncState({
+      leads: mergedLeads,
+      recordings: mergedRecs,
+      shifts: mergedShifts,
+      skippedLogs: mergedSkipLogs,
+      skippedLeads: mergedSkipLeads
+    });
+
     res.json({ success: true, updatedAt: updated.updatedAt });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save sync state: ' + err.message });
+  }
+});
+
+// Dedicated Fast Endpoint: Log Single Call Outcome
+app.post('/api/sync/call', (req, res) => {
+  try {
+    const { caller, leadId, company, name, phone, city, status, remark, fu, recording, conv } = req.body;
+    let current = getSyncState() || { leads: [], recordings: [], shifts: {}, skippedLogs: [], skippedLeads: [] };
+
+    let found = false;
+    if (Array.isArray(current.leads)) {
+      for (let l of current.leads) {
+        if (l.id == leadId) {
+          l.status = status;
+          if (!l.history) l.history = [];
+          const event = { t: Date.now(), by: caller, status, remark: (remark || '').trim() };
+          if (fu) {
+            event.fu = fu;
+            l.followUp = fu;
+          } else {
+            l.followUp = null;
+          }
+          if (recording) event.recording = recording;
+          if (status === 'INT' && conv) l.convertedAt = Date.now();
+          l.history.push(event);
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      if (!Array.isArray(current.leads)) current.leads = [];
+      const newLead = {
+        id: Number(leadId),
+        caller,
+        company: req.body.company || 'Studio Client',
+        name: req.body.name || 'Principal',
+        phone: req.body.phone || '',
+        city: req.body.city || '',
+        website: req.body.website || '',
+        status,
+        followUp: fu || null,
+        convertedAt: (status === 'INT' && conv) ? Date.now() : null,
+        history: [{ t: Date.now(), by: caller, status, remark: (remark || '').trim(), fu: fu || null }]
+      };
+      if (recording) newLead.history[0].recording = recording;
+      current.leads.push(newLead);
+    }
+
+    if (recording) {
+      if (!Array.isArray(current.recordings)) current.recordings = [];
+      const recEntry = {
+        id: 'rec-' + Date.now(),
+        caller,
+        leadId,
+        company: company || '',
+        name: name || '',
+        phone: phone || '',
+        city: city || '',
+        status,
+        remark: (remark || '').trim(),
+        date: Date.now(),
+        file: recording.name || 'call-recording.mp3',
+        size: recording.size || 0,
+        url: recording.serverUrl || recording.url
+      };
+      current.recordings.unshift(recEntry);
+    }
+
+    const updated = saveSyncState(current);
+    res.json({ success: true, leadFound: found, updatedAt: updated.updatedAt });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to log call: ' + err.message });
+  }
+});
+
+// Dedicated Fast Endpoint: Update Caller Shift State
+app.post('/api/sync/shift', (req, res) => {
+  try {
+    const { caller, shift } = req.body;
+    if (!caller || !shift) {
+      return res.status(400).json({ error: 'Missing caller or shift data' });
+    }
+    let current = getSyncState() || { leads: [], recordings: [], shifts: {}, skippedLogs: [], skippedLeads: [] };
+    if (!current.shifts) current.shifts = {};
+    current.shifts[caller] = { ...(current.shifts[caller] || {}), ...shift };
+
+    const updated = saveSyncState(current);
+    res.json({ success: true, updatedAt: updated.updatedAt });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update shift: ' + err.message });
   }
 });
 
