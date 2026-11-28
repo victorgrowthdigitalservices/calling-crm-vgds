@@ -245,7 +245,8 @@ app.post('/api/sync/call', (req, res) => {
         date: Date.now(),
         file: recording.name || 'call-recording.mp3',
         size: recording.size || 0,
-        url: recording.serverUrl || recording.url
+        url: recording.serverUrl || recording.url,
+        serverUrl: recording.serverUrl || recording.url
       };
       current.recordings.unshift(recEntry);
     }
